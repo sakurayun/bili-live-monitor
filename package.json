@@ -1,0 +1,34 @@
+{
+	"name": "bili-live-monitor",
+	"version": "0.1.0",
+	"description": "监控哔哩哔哩直播间数据，并实时保存至数据库。",
+	"main": "bili-live-monitor.js",
+	"scripts": {
+		"start": "node bili-live-monitor.js",
+		"console": "node monitor_console.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/JellyBlack/bili-live-monitor"
+	},
+	"author": "JellyBlack",
+	"license": "GPL-3.0-or-later",
+	"engines": {
+		"node": "7.6.0"
+	},
+	"bugs": {
+		"url": "https://github.com/JellyBlack/bili-live-monitor/issues"
+	},
+	"keywords": [
+		"bili",
+		"bilibili",
+		"live",
+		"monitor",
+		"mysql"
+	],
+	"dependencies": {
+		"bilibili-live-ws": "^5.1.1",
+		"mysql": "^2.18.1",
+		"xmlhttprequest": "^1.8.0"
+	}
+}
