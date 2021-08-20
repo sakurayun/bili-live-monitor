@@ -22,9 +22,12 @@ var config = {
 		// 购买舰长
 		"new_guards" : true,
 		
+		// 入场效果（比如欢迎舰长进入直播间）
+		"entry_effect" : true,
+		
 		// 所有直播事件json（非常占空间，一般用于调试）
 		// 受限于MySQL版本问题，json统一存储为文本格式
-		"json" : false,
+		"json" : false
 	},
 	
 	// 其他监控选项

@@ -342,6 +342,13 @@ async function main(){
 				else{
 					log.v0(`直播间${rooms[i].roomid}：根据您的要求，new_guards未创建`);
 				}
+				if(config.data.entry_effect){
+					await database.query(rooms[i].conn, queries.entry_effect);
+					log.v0(`直播间${rooms[i].roomid}：已新建或确认数据表entry_effect`);
+				}
+				else{
+					log.v0(`直播间${rooms[i].roomid}：根据您的要求，entry_effect未创建`);
+				}
 				if(config.data.json){
 					await database.query(rooms[i].conn, queries.json);
 					log.v0(`直播间${rooms[i].roomid}：已新建或确认数据表json`);

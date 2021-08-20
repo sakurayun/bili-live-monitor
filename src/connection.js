@@ -35,7 +35,8 @@ function Connection(){
 				popularity : [],
 				json : [],
 				followers : [],
-				new_guards : []
+				new_guards : [],
+				entry_effect : []
 			};
 			
 			// 离上次插值过去的时间
@@ -47,7 +48,8 @@ function Connection(){
 				popularity : 0,
 				json : 0,
 				followers : 0,
-				new_guards : 0
+				new_guards : 0,
+				entry_effect : 0
 			}
 			
 			// 统计数据
@@ -206,18 +208,17 @@ function Connection(){
 				}
 			}
 			
-			/* // 入场2
-			else if(data.cmd == 'ENTRY_EFFECT'){
-				var uid = data.data.uid;
+			// 入场效果
+			else if(data.cmd == 'ENTRY_EFFECT' && config.data.entry_effect/* 配置里开启了统计功能 */){
+				var origin_id = data.data.id;
+				var user_mid = data.data.uid;
 				var username = data.data.copy_writing.replace(/^.*?<%/, '').replace(/%>.*?$/, '');
+				var privilege_type = data.data.privilege_type;
 				if(config.log_dtl == 0){
-					log(`${username} < 进入直播间`);
+					log(`    ${username} < 进入直播间`);
 				}
-				var date = new Date();
-				var date_str = formatDate(date.getTime());
-				var ms = date.getMilliseconds();
-				buffer.welcome.push([uid, username, date_str, ms]);
-			} */
+				buffer.entry_effect.push([origin_id, user_mid, username, privilege_type, date_str]);
+			}
 			
 			// 送礼
 			else if(data.cmd == 'SEND_GIFT'){
@@ -369,7 +370,8 @@ function Connection(){
 			popularity : config.database.sql_interval * 1001,
 			json : config.database.sql_interval * 1001,
 			followers : config.database.sql_interval * 1001,
-			new_guards : config.database.sql_interval * 1001
+			new_guards : config.database.sql_interval * 1001,
+			entry_effect : config.database.sql_interval * 1001
 			}
 		}
 		task();
@@ -488,6 +490,15 @@ function task(){
 		}
 		else{
 			conn.last_query.new_guards += config.database.buf_interval;
+		}
+		
+		// 入场效果
+		if(conn.buffer.entry_effect.length >= config.database.amount || conn.last_query.entry_effect >= config.database.sql_interval * 1000 && conn.buffer.entry_effect.length > 0){
+			conn.database.queryAsync(conn.roomid, conn.database_conn,'INSERT INTO entry_effect (origin_id, user_mid, username, privilege_type, time) VALUES ?' ,[conn.buffer.entry_effect.splice(0, conn.buffer.entry_effect.length)]);
+			conn.last_query.entry_effect=0;
+		}
+		else{
+			conn.last_query.entry_effect += config.database.buf_interval;
 		}
 		
 		// 事件json
