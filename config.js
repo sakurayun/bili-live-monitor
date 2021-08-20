@@ -19,6 +19,9 @@ var config = {
 		// 粉丝数更新间隔，单位为秒
 		"followers_interval" : 60,
 		
+		// 购买舰长
+		"new_guards" : true,
+		
 		// 所有直播事件json（非常占空间，一般用于调试）
 		// 受限于MySQL版本问题，json统一存储为文本格式
 		"json" : false,

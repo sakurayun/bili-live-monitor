@@ -335,6 +335,13 @@ async function main(){
 				else{
 					log.v0(`直播间${rooms[i].roomid}：根据您的要求，followers未创建`);
 				}
+				if(config.data.new_guards){
+					await database.query(rooms[i].conn, queries.new_guards);
+					log.v0(`直播间${rooms[i].roomid}：已新建或确认数据表new_guards`);
+				}
+				else{
+					log.v0(`直播间${rooms[i].roomid}：根据您的要求，new_guards未创建`);
+				}
 				if(config.data.json){
 					await database.query(rooms[i].conn, queries.json);
 					log.v0(`直播间${rooms[i].roomid}：已新建或确认数据表json`);

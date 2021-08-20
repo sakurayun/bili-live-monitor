@@ -96,6 +96,16 @@ const queries = {
 	followers INT UNSIGNED NOT NULL DEFAULT '0' ${flag ? "COMMENT '粉丝数'" : ""} ,
 	time DATETIME NOT NULL ${flag ? "COMMENT '采集时间'" : ""} ,
 	PRIMARY KEY (id)) ENGINE = InnoDB ${flag ? "COMMENT = '粉丝数'" : ""};`,
+	
+	"new_guards" : `CREATE TABLE new_guards (
+	id INT NOT NULL AUTO_INCREMENT ${flag ? "COMMENT '主键'" : ""},
+	user_mid INT UNSIGNED NOT NULL DEFAULT '0' ${flag ? "COMMENT '用户的mid'" : ""},
+	username VARCHAR(50) NOT NULL ${flag ? "COMMENT '用户名'" : ""},
+	guard_level TINYINT NOT NULL DEFAULT '3' ${flag ? "COMMENT '大航海等级 0：普通用户 1：总督 2：提督 3：舰长'" : ""},
+	num INT UNSIGNED NOT NULL DEFAULT '1' ${flag ? "COMMENT '购买数量'" : ""},
+	price INT UNSIGNED NOT NULL DEFAULT '198000' ${flag ? "COMMENT '消耗金瓜子的数量'" : ""},
+	time DATETIME NOT NULL ${flag ? "COMMENT '购买时间'" : ""},
+	PRIMARY KEY (id)${config.database.enable_index ? ", INDEX (user_mid), INDEX (username)" : ""}) ENGINE = InnoDB ${flag ? "COMMENT = '购买舰长信息'" : ""};`
 }
 
 // 导出模块

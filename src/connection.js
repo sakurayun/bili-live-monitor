@@ -34,7 +34,8 @@ function Connection(){
 				gifts : [],
 				popularity : [],
 				json : [],
-				followers : []
+				followers : [],
+				new_guards : []
 			};
 			
 			// 离上次插值过去的时间
@@ -45,7 +46,8 @@ function Connection(){
 				gifts : 0,
 				popularity : 0,
 				json : 0,
-				followers : 0
+				followers : 0,
+				new_guards : 0
 			}
 			
 			// 统计数据
@@ -271,6 +273,23 @@ function Connection(){
 				}
 			}
 			
+			// 购买舰长
+			else if(data.cmd == 'GUARD_BUY' && config.data.new_guards/* 配置里开启了统计功能 */){
+				var user_mid = data.data.uid;
+				var username = data.data.username;
+				var guard_level = data.data.guard_level;
+				var num = data.data.num;
+				var price = data.data.price;
+				var gift_name = data.data.gift_name;
+				var time = formatDate(data.data.start_time);
+				if(config.log.log_level == 0){
+					log.verbose(this.roomid, `  ${username} 开通了${gift_name}`);
+				}
+				if(config.database.enable_database){
+					this.buffer.new_guards.push([user_mid, username, guard_level, num, price, time]);
+				}
+			}
+			
 			// 直播事件json
 			if(config.data.json && config.database.enable_database){
 				this.buffer.json.push([date_str, data.cmd, JSON.stringify(data)]);
@@ -349,7 +368,8 @@ function Connection(){
 			gifts : config.database.sql_interval * 1001,
 			popularity : config.database.sql_interval * 1001,
 			json : config.database.sql_interval * 1001,
-			followers : config.database.sql_interval * 1001
+			followers : config.database.sql_interval * 1001,
+			new_guards : config.database.sql_interval * 1001
 			}
 		}
 		task();
@@ -459,6 +479,15 @@ function task(){
 		}
 		else{
 			conn.last_query.followers += config.database.buf_interval;
+		}
+		
+		// 购买舰长
+		if(conn.buffer.new_guards.length >= config.database.amount || conn.last_query.new_guards >= config.database.sql_interval * 1000 && conn.buffer.new_guards.length > 0){
+			conn.database.queryAsync(conn.roomid, conn.database_conn,'INSERT INTO new_guards (user_mid, username, guard_level, num, price, time) VALUES ?' ,[conn.buffer.new_guards.splice(0, conn.buffer.new_guards.length)]);
+			conn.last_query.new_guards=0;
+		}
+		else{
+			conn.last_query.new_guards += config.database.buf_interval;
 		}
 		
 		// 事件json
