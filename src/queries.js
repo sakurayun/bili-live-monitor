@@ -97,7 +97,7 @@ const queries = {
 	time DATETIME NOT NULL ${flag ? "COMMENT '采集时间'" : ""} ,
 	PRIMARY KEY (id)) ENGINE = InnoDB ${flag ? "COMMENT = '粉丝数'" : ""};`,
 	
-	"new_guards" : `CREATE TABLE new_guards (
+	"new_guards" : `CREATE TABLE IF NOT EXISTS new_guards (
 	id INT NOT NULL AUTO_INCREMENT ${flag ? "COMMENT '主键'" : ""} ,
 	user_mid INT UNSIGNED NOT NULL DEFAULT '0' ${flag ? "COMMENT '用户的mid'" : ""} ,
 	username VARCHAR(50) NOT NULL ${flag ? "COMMENT '用户名'" : ""} ,
@@ -107,14 +107,42 @@ const queries = {
 	time DATETIME NOT NULL ${flag ? "COMMENT '购买时间'" : ""} ,
 	PRIMARY KEY (id)${config.database.enable_index ? ", INDEX (user_mid), INDEX (username)" : ""}) ENGINE = InnoDB ${flag ? "COMMENT = '购买舰长信息'" : ""};`,
 	
-	"entry_effect" : `CREATE TABLE entry_effect (
+	"entry_effect" : `CREATE TABLE IF NOT EXISTS entry_effect (
 	id INT NOT NULL AUTO_INCREMENT ${flag ? "COMMENT '主键'" : ""} ,
 	origin_id INT NOT NULL DEFAULT '0' ${flag ? "COMMENT '原始json里的id字段'" : ""} ,
 	user_mid INT UNSIGNED NOT NULL ${flag ? "COMMENT '用户的mid'" : ""} ,
 	username VARCHAR(50) NOT NULL ${flag ? "COMMENT '用户名'" : ""} ,
 	privilege_type SMALLINT NOT NULL DEFAULT '3' ${flag ? "COMMENT '特权类型'" : ""} ,
 	time DATETIME NOT NULL ${flag ? "COMMENT '入场时间'" : ""} ,
-	PRIMARY KEY (id)${config.database.enable_index ? ", INDEX (user_mid), INDEX (username)" : ""}) ENGINE = InnoDB ${flag ? "COMMENT = '入场效果'" : ""};`
+	PRIMARY KEY (id)${config.database.enable_index ? ", INDEX (user_mid), INDEX (username)" : ""}) ENGINE = InnoDB ${flag ? "COMMENT = '入场效果'" : ""};`,
+	
+	"superchat" : `CREATE TABLE IF NOT EXISTS superchat ( 
+	id INT NOT NULL AUTO_INCREMENT ${flag ? "COMMENT '主键'" : ""} ,
+	origin_id INT NOT NULL DEFAULT '0' ${flag ? "COMMENT '原始json里的id字段'" : ""} ,
+	time DATETIME NOT NULL ${flag ? "COMMENT '醒目留言发送时间'" : ""} ,
+	price INT UNSIGNED NOT NULL DEFAULT '30' ${flag ? "COMMENT '醒目留言价格'" : ""} , 
+	duration INT UNSIGNED NOT NULL DEFAULT '60' ${flag ? "COMMENT '醒目留言持续时间，单位为秒'" : ""} , 
+	user_mid INT UNSIGNED NOT NULL ${flag ? "COMMENT '用户的mid'" : ""} ,
+	text TEXT NOT NULL ${flag ? "COMMENT '弹幕内容'" : ""} ,
+	token INT UNSIGNED NOT NULL ${flag ? "COMMENT 'json里的token字段'" : ""} ,
+	PRIMARY KEY (id)${config.database.enable_index ? ", INDEX (user_mid)" : ""}
+	${config.database.enable_foreign_key ? ", FOREIGN KEY (user_mid) REFERENCES users_from_superchat (user_mid)" : ""}) ENGINE = InnoDB ${flag ? "COMMENT = '醒目留言'" : ""};`,
+	
+	"users_from_superchat" : `CREATE TABLE IF NOT EXISTS users_from_superchat (
+	user_mid INT UNSIGNED NOT NULL ${flag ? "COMMENT '用户的mid'" : ""} ,
+	username VARCHAR(50) NOT NULL ${flag ? "COMMENT '用户名'" : ""} ,
+	is_admin BOOLEAN NOT NULL DEFAULT FALSE ${flag ? "COMMENT '是否为房管'" : ""} ,
+	is_main_vip BOOLEAN NOT NULL DEFAULT FALSE ${flag ? "COMMENT '是否为主站大会员'" : ""} ,
+	is_vip BOOLEAN NOT NULL DEFAULT FALSE ${flag ? "COMMENT '是否为老爷'" : ""} ,
+	is_svip BOOLEAN NOT NULL DEFAULT FALSE ${flag ? "COMMENT '是否为年费老爷'" : ""} ,
+	medal INT UNSIGNED NOT NULL DEFAULT '0' ${flag ? "COMMENT '粉丝勋章对应主播的房间号'" : ""} ,
+	medal_level TINYINT NOT NULL DEFAULT '0' ${flag ? "COMMENT '粉丝勋章等级'" : ""} ,
+	level TINYINT NOT NULL DEFAULT '0' ${flag ? "COMMENT '用户的直播间等级'" : ""} ,
+	rank SMALLINT UNSIGNED NOT NULL DEFAULT '0' ${flag ? "COMMENT '排名，大于50000名标识为0'" : ""} ,
+	title TEXT NOT NULL ${flag ? "COMMENT '用户头衔'" : ""} ,
+	guard_level TINYINT NOT NULL DEFAULT '0' ${flag ? "COMMENT '大航海等级 0：普通用户 1：总督 2：提督 3：舰长'" : ""} ,
+	PRIMARY KEY (user_mid)${config.database.enable_index ? ", INDEX (username) , INDEX (medal)" : ""}
+	${config.database.enable_foreign_key ? ", FOREIGN KEY (medal) REFERENCES fans_medal (anchor_room_id)" : ""}) ENGINE = InnoDB ${flag ? "COMMENT = '从醒目留言采集到的用户信息'" : ""};`
 }
 
 // 导出模块

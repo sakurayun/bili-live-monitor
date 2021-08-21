@@ -349,6 +349,16 @@ async function main(){
 				else{
 					log.v0(`直播间${rooms[i].roomid}：根据您的要求，entry_effect未创建`);
 				}
+				if(config.data.superchat){
+					await database.query(rooms[i].conn, queries.superchat);
+					log.v0(`直播间${rooms[i].roomid}：已新建或确认数据表superchat`);
+					await database.query(rooms[i].conn, queries.users_from_superchat);
+					log.v0(`直播间${rooms[i].roomid}：已新建或确认数据表users_from_superchat`);
+				}
+				else{
+					log.v0(`直播间${rooms[i].roomid}：根据您的要求，superchat未创建`);
+					log.v0(`直播间${rooms[i].roomid}：根据您的要求，users_from_superchat未创建`);
+				}
 				if(config.data.json){
 					await database.query(rooms[i].conn, queries.json);
 					log.v0(`直播间${rooms[i].roomid}：已新建或确认数据表json`);

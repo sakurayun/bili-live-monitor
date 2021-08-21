@@ -29,6 +29,7 @@ function Connection(){
 				users_from_danmaku : [],
 				users_from_gifts : [],
 				users_from_welcome : [],
+				users_from_superchat : [],
 				danmaku : [],
 				welcome_msg : [],
 				gifts : [],
@@ -36,7 +37,8 @@ function Connection(){
 				json : [],
 				followers : [],
 				new_guards : [],
-				entry_effect : []
+				entry_effect : [],
+				superchat : []
 			};
 			
 			// 离上次插值过去的时间
@@ -49,7 +51,8 @@ function Connection(){
 				json : 0,
 				followers : 0,
 				new_guards : 0,
-				entry_effect : 0
+				entry_effect : 0,
+				superchat : 0
 			}
 			
 			// 统计数据
@@ -172,7 +175,7 @@ function Connection(){
 				var timestamp = info[0][4];
 				var time = formatDate(timestamp);
 				var text = info[1];
-				var ct = parseInt(info[9].ct, 16);
+				var ct = parseInt(info[9].ct, 16);// 字符串是十六进制的，须转换
 				if(config.database.enable_database){
 					// 将数据添加到缓冲区
 					this.buffer.fans_medal.push([anchor_room_id, anchor_name, medal_name]);
@@ -291,6 +294,40 @@ function Connection(){
 				}
 			}
 			
+			// 醒目留言
+			else if(data.cmd == 'SUPER_CHAT_MESSAGE' && config.data.superchat/* 配置里开启了统计功能 */){
+				var user_mid = data.data.uid;
+				var username = data.data.user_info.uname;
+				var guard_level = data.data.user_info.guard_level;
+				var price = data.data.price;
+				var time = formatDate(data.data.start_time);
+				var origin_id = data.data.id;
+				var duration = data.data.time;
+				var anchor_room_id = data.data.medal_info.anchor_roomid;
+				var anchor_name = data.data.medal_info.anchor_uname;
+				var medal_name = data.data.medal_info.medal_name;
+				var medal_level = data.data.medal_info.medal_level;
+				var text = data.data.message;
+				var is_admin = data.data.user_info.manager;
+				var is_main_vip = data.data.user_info.is_main_vip;
+				var is_vip = data.data.user_info.is_vip;
+				var is_svip = data.data.user_info.is_svip;
+				var level = data.data.user_info.user_level;
+				var title = data.data.user_info.title;
+				var token = parseInt(data.data.token, 16);
+				if(title == "0"){
+					title = '';
+				}
+				if(config.log.log_level == 0){
+					log.verbose(this.roomid, `${username} 发布醒目留言：${text}`);
+				}
+				if(config.database.enable_database){
+					this.buffer.fans_medal.push([anchor_room_id, anchor_name, medal_name]);
+					this.buffer.users_from_superchat.push([user_mid, username, is_admin, is_main_vip, is_vip, is_svip, anchor_room_id, medal_level, level, rank, title, guard_level]);
+					this.buffer.superchat.push([origin_id, time, price, duration, user_mid, text, token]);
+				}
+			}
+			
 			// 直播事件json
 			if(config.data.json && config.database.enable_database){
 				this.buffer.json.push([date_str, data.cmd, JSON.stringify(data)]);
@@ -371,7 +408,8 @@ function Connection(){
 			json : config.database.sql_interval * 1001,
 			followers : config.database.sql_interval * 1001,
 			new_guards : config.database.sql_interval * 1001,
-			entry_effect : config.database.sql_interval * 1001
+			entry_effect : config.database.sql_interval * 1001,
+			superchat : config.database.sql_interval * 1001
 			}
 		}
 		task();
@@ -463,6 +501,21 @@ function task(){
 		}
 		else{
 			conn.last_query.welcome_msg += config.database.buf_interval;
+		}
+		
+		// 醒目留言及用户
+		if(conn.buffer.superchat.length >= config.database.amount || conn.last_query.superchat >= config.database.sql_interval * 1000 && conn.buffer.superchat.length > 0){
+			if(config.extra.override){
+				conn.database.queryAsync(conn.roomid, conn.database_conn,'INSERT INTO users_from_superchat (user_mid, username, is_admin,  is_main_vip, is_vip, is_svip, medal, medal_level, level, rank, title, guard_level) VALUES ? ON DUPLICATE KEY UPDATE username=VALUES(username), is_admin=VALUES(is_admin), is_main_vip=VALUES(is_main_vip), is_vip=VALUES(is_vip), is_svip=VALUES(is_svip), medal=VALUES(medal), medal_level=VALUES(medal_level), level=VALUES(level), rank=VALUES(rank), title=VALUES(title), guard_level=VALUES(guard_level)' ,[conn.buffer.users_from_superchat.splice(0, conn.buffer.users_from_superchat.length)]);
+			}
+			else{
+				conn.database.queryAsync(conn.roomid, conn.database_conn,'INSERT IGNORE INTO users_from_superchat (user_mid, username, is_admin, is_main_vip, is_vip, is_svip, medal, medal_level, level, rank, title, guard_level) VALUES ?' ,[conn.buffer.users_from_superchat.splice(0, conn.buffer.users_from_superchat.length)]);
+			}
+			conn.database.queryAsync(conn.roomid, conn.database_conn,'INSERT INTO superchat (origin_id, time, price, duration, user_mid, text, token) VALUES ?' ,[conn.buffer.superchat.splice(0, conn.buffer.superchat.length)]);
+			conn.last_query.superchat=0;
+		}
+		else{
+			conn.last_query.superchat += config.database.buf_interval;
 		}
 		
 		// 人气值
