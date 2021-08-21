@@ -374,6 +374,7 @@ function Connection(){
 				setInterval(function(){
 					try{
 						for(var i = 0; i < conns.length;  i++){
+							var start_time = Date.now();
 							var conn = conns[i];
 							if(conn.running){
 								var data = liveroomHandler.getAnchorInfo(conn.anchor_mid);
@@ -384,6 +385,13 @@ function Connection(){
 								}
 								if(config.log.log_level == 0){
 									log.verbose(conn.roomid, `粉丝数：${data.follower_num}`);
+								}
+							}
+							// 休眠
+							var time = (config.data.followers_interval * 1000) / conns.length;
+							while(true){
+								if(Date.now() - start_time >= time){
+									break;
 								}
 							}
 						}
