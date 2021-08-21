@@ -8,6 +8,8 @@
 
 **该项目处于测试版，以后可能有较大改动。**
 
+**如加载慢，可访问[镜像仓库](https://gitee.com/jellyblack/bili-live-monitor)。**
+
 ## 准备
 
 该项目依赖Node.js 7.6（V8版本 5.5）及以上版本。请确保已安装Node.js。运行`node --version`查看Node.js版本号。
@@ -58,6 +60,12 @@ Termux是带有软件包的终端模拟器。打开Termux，执行`pkg install n
 git clone https://github.com/JellyBlack/bili-live-monitor
 cd bili-live-monitor
 npm install
+```
+
+或者从镜像仓库克隆：
+
+```shell
+git clone https://gitee.com/jellyblack/bili-live-monitor
 ```
 
 ##### 配置
