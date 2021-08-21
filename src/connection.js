@@ -431,7 +431,7 @@ function Connection(){
 			
 			// 定时查询粉丝数
 			if(config.data.followers){
-				setInterval(function(){
+				setInterval(async function(){
 					try{
 						for(var i = 0; i < conns.length;  i++){
 							var start_time = Date.now();
@@ -447,13 +447,17 @@ function Connection(){
 									log.verbose(conn.roomid, `粉丝数：${data.follower_num}`);
 								}
 							}
+							var end_time = Date.now();
 							// 休眠
-							var time = (config.data.followers_interval * 1000) / conns.length;
-							while(true){
-								if(Date.now() - start_time >= time){
-									break;
-								}
+							var time = (config.data.followers_interval * 1000) / conns.length - (end_time - start_time);
+							if(time < 0){
+								time = 0;
 							}
+							await new Promise((resolve, reject) => {
+								setTimeout(function(){
+									resolve();
+								}, time);
+							});
 						}
 					}
 					catch(e){

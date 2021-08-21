@@ -138,6 +138,11 @@ async function main(){
 		log.v0(`在${config.extra.console_port}端口上侦听控制台连接`);
 	});
 	
+	// 桥头麻袋，让“侦听控制台连接”的日志先打印
+	await new Promise((resolve, reject) => {
+		setTimeout(resolve(), 1);
+	});
+	
 	// 检查要监控的直播间
 	log.v1("正在检查待监控的直播间");
 	if(config.live_room.length == 0){
@@ -145,9 +150,9 @@ async function main(){
 		process.exit(0);
 	}
 	
-	var currentRoom = 0; //当前检查的房间
-	config.live_room.forEach(function(element){
-		currentRoom ++;
+	for(var i = 0; i < config.live_room.length; i ++){
+		var currentRoom = i + 1; //当前检查的房间
+		var element = config.live_room[i];
 		log.v0(`正在检查第${currentRoom}个直播间配置`);
 		if(element <= 0){
 			log.v0(`第${currentRoom}个直播间未配置，已跳过\n`);
@@ -162,7 +167,7 @@ async function main(){
 				// 测试直播间可用性
 				liveroomHandler.testRoomAvailability(element);
 				log.v0(`第${currentRoom}个直播间检查通过`);
-				sleep();// 请求间隔
+				await sleep();// 请求间隔
 				// 获取真实id和状态
 				var root = liveroomHandler.getTrueIdAndStatus(element);
 				trueId = root.trueId;
@@ -181,14 +186,14 @@ async function main(){
 					running = false;
 				}
 				log.v0(`第${currentRoom}个直播间的真实id为${trueId}`);
-				sleep();
+				await sleep();
 				// 获取主播信息
 				mid = liveroomHandler.getMid(trueId);
 				var data = liveroomHandler.getAnchorInfo(mid);
 				anchor_name = data.info.uname;
 				log.v0(`直播间#${currentRoom}    主播：${data.info.uname}（mid:${mid}）    ${data.info.official_verify.num == -1 ? '' : '√认证主播    '}等级：${data.exp.master_level.level}    状态：${status_str}`);
 				log.v0(`粉丝勋章：${data.medal_name}    粉丝数：${data.follower_num}    公告：${data.room_news.content}`);
-				sleep();
+				await sleep();
 			}
 			else{
 				// 未启用直播校验
@@ -224,7 +229,7 @@ async function main(){
 			log.v2(`第${currentRoom}个直播间出错：${e}\n`);
 			return;
 		}
-	});
+	}
 	// 没有任何直播间，则退出
 	if(rooms.length == 0){
 		log.v2("没有配置任何直播间，已终止运行。请检查config.js文件。");
@@ -637,12 +642,11 @@ function sleep(){
 	}
 	var max_time = config.extra.interval_base + config.extra.interval_random;
 	var time = min_time + Math.floor(Math.random() * (max_time - min_time));
-	var start_time = Date.now();
-	while(true){
-		if(Date.now() - start_time >= time){
-			break;
-		}
-	}
+	return new Promise((resolve, reject) => {
+		setTimeout(function(){
+			resolve();
+		}, time);
+	});
 }
 
 // 导出模块
