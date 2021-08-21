@@ -7,6 +7,7 @@ const { LiveWS, LiveTCP, KeepLiveWS, KeepLiveTCP } = require('bilibili-live-ws')
 const Database = require('./database');
 const Log = require('./log');
 const LiveroomHandler = require('./liveroom_handler');
+const notification = require('./notification');
 
 var liveroomHandler = new LiveroomHandler();
 var log = new Log();
@@ -462,8 +463,11 @@ function Connection(){
 			}
 			
 			// 如所有连接都自动终止，则安全停止监控
-			if(config.database.enable_database){
+			if(config.extra.auto_stop){
 				setInterval(function(){
+					if(conns.length == 0){
+						return;
+					}
 					for(var i = 0; i < conns.length;  i++){
 						if(conns[i].auto_stopped = false){
 							return;
@@ -484,6 +488,7 @@ function Connection(){
 							log.v0(`已安全关闭直播间${conns[i].roomid}的连接`);
 						}
 						log.v2("已安全退出监控");
+						notification.notifyViaDingTalk("已安全退出监控。");
 						setTimeout(() => {process.exit(0);}, 1000);
 					}, 1000);
 				}, 1000);
