@@ -38,7 +38,7 @@ var config = {
 		// 是否进行房间校验
 		// 强烈建议开启！用户界面获取的房间号会优先显示为短号，而API要求的是长号，房间校验功能可以自动转换。
 		// 禁用后，须把上面可选的监控数据-主播粉丝数一并禁用，否则会报错
-		"room_check" : false,
+		"room_check" : true,
 		
 		// 哔哩哔哩API的请求间隔，单位为毫秒
 		// 如请求间隔基准值为1000ms，随机值为400ms, 则每两次请求之间会随机暂停600ms~1400ms；二者都设为0则禁用请求间隔
@@ -166,6 +166,41 @@ var config = {
 		
 		// 可选, WS握手的Token
 		"key" : ""
+	},
+	
+	// 钉钉通知，更多信息参见README文档，通知重要日志和统计数据
+	"dingtalk" : {
+		// 是否启用钉钉通知
+		"enabled" : true,
+		
+		// Webhook地址
+		// 例如：https://oapi.dingtalk.com/robot/send?access_token=XXXXXX
+		"webhook" : "",
+		
+		// 统计信息发送间隔，单位为分钟，不小于1
+		"interval" : 60,
+	},
+	
+	// 邮件通知，更多信息参见README文档，仅通知统计数据
+	"email" : {
+		// 是否启用邮件通知
+		"enabled" : true,
+		
+		// 发送邮箱
+		"email_from" : "",
+		
+		// SMTP地址，请确保你的发送邮箱开启了SMTP服务，如smtp.qq.com
+		"smtp" : "",
+		
+		// 发送邮箱的密码或授权码
+		// QQ、126等邮箱要求授权码，Gmail用密码即可
+		"password" : "",
+		
+		// 接收邮箱，支持多个。填空字符串则发送给自己
+		"email_to" : [""],
+		
+		// 统计信息发送间隔，单位为分钟，不小于5
+		"time" : 360
 	}
 }
 

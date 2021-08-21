@@ -70,8 +70,16 @@ function Connection(){
 				superchat : 0
 			}
 			
-			// 统计数据
+			// 统计数据（日志）
 			this.statistics = {
+				danmaku : 0,
+				welcome_msg : 0,
+				gifts : 0,
+				json : 0
+			}
+			
+			// 统计数据（邮件）
+			this.statistics_email = {
 				danmaku : 0,
 				welcome_msg : 0,
 				gifts : 0,
@@ -171,6 +179,9 @@ function Connection(){
 				if(config.log.log_level == 1){
 					this.statistics.danmaku ++;
 				}
+				if(config.email.enabled){
+					this.statistics_email.danmaku ++;
+				}
 				// 以下各字段的含义参考数据库注释
 				var info = data.info;
 				var anchor_room_id = info[3][3];
@@ -228,6 +239,9 @@ function Connection(){
 				if(config.log.log_level == 1){
 					this.statistics.welcome_msg ++;
 				}
+				if(config.email.enabled){
+					this.statistics_email.welcome_msg ++;
+				}
 				if(data.data.msg_type != 1) {
 					return;
 				}
@@ -256,7 +270,7 @@ function Connection(){
 				if(config.log_dtl == 0){
 					log(`    ${username} < 进入直播间`);
 				}
-				buffer.entry_effect.push([origin_id, user_mid, username, privilege_type, date_str]);
+				this.buffer.entry_effect.push([origin_id, user_mid, username, privilege_type, date_str]);
 			}
 			
 			// 送礼
@@ -275,6 +289,9 @@ function Connection(){
 				var guard_level = data.data.medal_info.guard_level;
 				if(config.log.log_level == 1){
 					this.statistics.gifts += num;
+				}
+				if(config.email.enabled){
+					this.statistics_email.gifts += num;
 				}
 				if(config.log.log_level == 0){
 					log.verbose(this.roomid, `  ${username} < 赠送了 ${num} 个 ${gift_name}`);
@@ -302,6 +319,9 @@ function Connection(){
 				var guard_level = data.data.medal_info.guard_level;
 				if(config.log.log_level == 1){
 					this.statistics.gifts += num;
+				}
+				if(config.email.enabled){
+					this.statistics_email.gifts += num;
 				}
 				if(config.log.log_level == 0){
 					log.verbose(this.roomid, `  ${username} < 连击赠送了 ${num} 个 ${gift_name}`);
@@ -370,6 +390,9 @@ function Connection(){
 			}
 			if(config.log.log_level == 1){
 				this.statistics.json ++;
+			}
+			if(config.email.enabled){
+				this.statistics_email.json ++;
 			}
 		});
 		
@@ -473,7 +496,9 @@ function Connection(){
 		for(var i = 0; i < conns.length;  i++){
 			conns[i].last_query = query_right_now;
 		}
-		task();
+		if(config.database.enable_database){
+			task();
+		}
 		// 接下来等待SQL命令执行完毕
 	}
 }

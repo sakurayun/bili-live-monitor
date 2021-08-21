@@ -20,6 +20,7 @@ const Log = require('./log');
 const Database = require('./database');
 const Connection = require('./connection');
 const LiveroomHandler = require('./liveroom_handler');
+const notification = require('./notification');
 const queries = require('./queries');
 
 // 监控直播间的id列表
@@ -29,6 +30,7 @@ var rooms = [];
 var Room = function(){
 	var roomid;// 房间号
 	var anchor_mid;// 主播mid
+	var anchor_name;// 主播用户名
 	var database_name;// 数据库名称
 	var conn;// 数据库连接
 	var running;// 是否运行
@@ -112,6 +114,7 @@ async function main(){
 						log.v0(`已安全关闭直播间${conns[i].roomid}的连接`);
 					}
 					log.v2("已安全退出监控");
+					notification.notifyViaDingTalk("已安全退出监控。");
 					socket.write("已安全退出监控\n");
 					socket.write("/disconnect");// 请求客户端断开连接
 					setTimeout(() => {process.exit(0);}, 1000);
@@ -153,6 +156,7 @@ async function main(){
 		try{
 			var trueId;
 			var mid;
+			var anchor_name;
 			var running;
 			if(config.extra.room_check){
 				// 测试直播间可用性
@@ -160,7 +164,7 @@ async function main(){
 				log.v0(`第${currentRoom}个直播间检查通过`);
 				sleep();// 请求间隔
 				// 获取真实id和状态
-				var root = liveroomHandler.getTrueId(element);
+				var root = liveroomHandler.getTrueIdAndStatus(element);
 				trueId = root.trueId;
 				var status = root.status;
 				var status_str;
@@ -181,6 +185,7 @@ async function main(){
 				// 获取主播信息
 				mid = liveroomHandler.getMid(trueId);
 				var data = liveroomHandler.getAnchorInfo(mid);
+				anchor_name = data.info.uname;
 				log.v0(`直播间#${currentRoom}    主播：${data.info.uname}（mid:${mid}）    ${data.info.official_verify.num == -1 ? '' : '√认证主播    '}等级：${data.exp.master_level.level}    状态：${status_str}`);
 				log.v0(`粉丝勋章：${data.medal_name}    粉丝数：${data.follower_num}    公告：${data.room_news.content}`);
 				sleep();
@@ -189,6 +194,7 @@ async function main(){
 				// 未启用直播校验
 				trueId = element;
 				mid = 0;
+				anchor_name = "未知";
 				running = true;
 				log.v0("已跳过房间校验");
 			}
@@ -196,6 +202,7 @@ async function main(){
 			var room = new Room();
 			room.roomid = trueId;
 			room.anchor_mid = mid;
+			room.anchor_name = anchor_name;
 			room.running = running;
 			// 检查是否重复
 			var flag = false;
@@ -436,6 +443,15 @@ async function main(){
 	
 	// 此处已全部准备完毕
 	all_ready = true;
+	notification.notifyViaDingTalk("所有监控已设立完毕。");
+	if(config.dingtalk.enabled){
+		if(config.dingtalk.interval >= 1){
+			setInterval(autoNotifyViaDingTalk, config.dingtalk.interval * 60000);
+		}
+		else{
+			log.v2("\n钉钉通知过于频繁，已禁用钉钉通知。");
+		}
+	}
 	log.v2("\n所有监控已设立完毕。");
 	log.v2("请使用“npm run console”安全退出，避免数据丢失");
 }
@@ -451,17 +467,55 @@ function getState(){
 	for(var i = 0; i < conns.length; i ++){
 		var status;
 		if(conns[i].auto_stopped){
-			status = "已自动停止"
+			status = "已自动停止";
 		}
 		else if(conns[i].running){
-			status = "运行中"
+			status = "运行中";
 		}
 		else{
-			status = "已暂停"
+			status = "已暂停";
 		}
-		string += `直播间#${i + 1}    房间号：${conns[i].roomid}    状态：${status}    事件数： ${conns[i].recorded_events}\n`;
+		string += `直播间#${i + 1}  ${rooms[i].anchor_name}  房间号：${conns[i].roomid}  状态：${status}  事件数：${conns[i].recorded_events}\n`;
 	}
 	return string;
+}
+
+// 钉钉定时通知
+var last_recorded_events = [];
+function autoNotifyViaDingTalk(){
+	var string = "过去";
+	if(config.dingtalk.interval >= 60){
+		var hour = Math.floor(config.dingtalk.interval / 60);
+		string += `${hour}小时`;
+	}
+	var minute = config.dingtalk.interval % 60;
+	if(minute != 0){
+		string += `${minute}分钟`;
+	}
+	string += "的监控数据\n";
+	
+	for(var i = 0; i < conns.length; i ++){
+		var events;
+		if(last_recorded_events.length == i){
+			last_recorded_events.push(conns[i].recorded_events);
+			events = conns[i].recorded_events;
+		}
+		else{
+			events = conns[i].recorded_events - last_recorded_events[i];
+		}
+		var status;
+		if(conns[i].auto_stopped){
+			status = "已自动停止";
+		}
+		else if(conns[i].running){
+			status = "运行中";
+		}
+		else{
+			status = "已暂停";
+		}
+		string += `直播间#${i + 1}  ${rooms[i].anchor_name}  房间号：${conns[i].roomid}  状态：${status}  事件数：${events}${i == conns.length -1 ? "" : "\n"}`;
+	}
+	notification.notifyViaDingTalk(string);
 }
 
 // 销毁已有的连接
