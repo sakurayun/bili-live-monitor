@@ -106,7 +106,7 @@ var config = {
 		 */
 		"what_to_do_when_existing" : "APPEND",
 		
-		// 说明：以下三个选项仅第一次创建数据库时有效
+		// 说明：以下三个选项仅第一次创建数据表时有效
 		// 是否启用外键
 		// 警告：启用外键可能造成因SQL执行顺序不确定导致的无法插值问题
 		"enable_foreign_key" : false,
