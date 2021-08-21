@@ -13,6 +13,20 @@ var log = new Log();
 var conns = [];// 连接列表
 var ready = false;// 是否完成setInterval等操作
 
+// 将此赋值给last_query，立即插值
+var query_right_now = {
+	fans_medal : config.database.sql_interval * 1001,
+	danmaku : config.database.sql_interval * 1001,
+	welcome_msg : config.database.sql_interval * 1001,
+	gifts : config.database.sql_interval * 1001,
+	popularity : config.database.sql_interval * 1001,
+	json : config.database.sql_interval * 1001,
+	followers : config.database.sql_interval * 1001,
+	new_guards : config.database.sql_interval * 1001,
+	entry_effect : config.database.sql_interval * 1001,
+	superchat : config.database.sql_interval * 1001
+}
+
 function Connection(){
 	this.create = function(roomid, anchor_mid, database, database_conn, running/* 初始状态 */){
 		return new Promise((resolve, reject) => {
@@ -20,7 +34,8 @@ function Connection(){
 			this.anchor_mid = anchor_mid;// 主播的mid
 			this.database = database;// 数据库
 			this.database_conn  = database_conn;// 数据库连接
-			this.running = running;// 状态
+			this.running = running;// 是否正在运行
+			this.auto_stopped = false;// 是否自动暂停
 			this.recorded_events = 0;// 记录的事件数
 			
 			// SQL插值缓存
@@ -130,8 +145,29 @@ function Connection(){
 			var date = new Date();
 			var date_str = formatDate(date);
 			
+			// 开播
+			if(data.cmd == 'LIVE'){
+				log.verbose(this.roomid, "【主播已开播】");
+				if(config.extra.live_only && !this.auto_stopped){
+					this.running = true;
+				}
+			}
+			
+			// 关播
+			if(data.cmd == 'PREPARING'){
+				log.verbose(this.roomid, "【主播已关播】");
+				if(config.extra.auto_stop){
+					// 停止监控
+					this.running = false;
+					this.auto_stopped = true;
+				}
+				else if(config.extra.live_only){
+					this.running = false;
+				}
+			}
+			
 			// 弹幕
-			if(data.cmd == 'DANMU_MSG'){
+			else if(data.cmd == 'DANMU_MSG'){
 				if(config.log.log_level == 1){
 					this.statistics.danmaku ++;
 				}
@@ -401,24 +437,41 @@ function Connection(){
 					}
 				}, config.data.followers_interval * 1000);
 			}
+			
+			// 如所有连接都自动终止，则安全停止监控
+			if(config.database.enable_database){
+				setInterval(function(){
+					for(var i = 0; i < conns.length;  i++){
+						if(conns[i].auto_stopped = false){
+							return;
+						}
+					}
+					conns[0].finish();
+					setTimeout(async function(){
+						for(var i = 0; i < conns.length; i ++){
+							conns[i].live_conn.close();// 关闭直播间连接
+							if(config.database.enable_database){
+								try{
+									await conns[i].database_conn.release();// 关闭数据库连接
+								}
+								catch(e){
+									log.v2(e);
+								}
+							}
+							log.v0(`已安全关闭直播间${conns[i].roomid}的连接`);
+						}
+						log.v2("已安全退出监控");
+						setTimeout(() => {process.exit(0);}, 1000);
+					}, 1000);
+				}, 1000);
+			}
 		}
 	}
 	
 	// 安全退出时调用，立即插值
 	this.finish = function(){
 		for(var i = 0; i < conns.length;  i++){
-			conns[i].last_query = {
-			fans_medal : config.database.sql_interval * 1001,
-			danmaku : config.database.sql_interval * 1001,
-			welcome_msg : config.database.sql_interval * 1001,
-			gifts : config.database.sql_interval * 1001,
-			popularity : config.database.sql_interval * 1001,
-			json : config.database.sql_interval * 1001,
-			followers : config.database.sql_interval * 1001,
-			new_guards : config.database.sql_interval * 1001,
-			entry_effect : config.database.sql_interval * 1001,
-			superchat : config.database.sql_interval * 1001
-			}
+			conns[i].last_query = query_right_now;
 		}
 		task();
 		// 接下来等待SQL命令执行完毕

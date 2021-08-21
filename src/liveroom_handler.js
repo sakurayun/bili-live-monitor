@@ -47,8 +47,8 @@ function LiveroomHandler() {
 		}
 	}
 	
-	// 获取直播间真实id
-	this.getTrueId = function(roomid) {
+	// 获取直播间真实id和状态
+	this.getTrueIdAndStatus = function(roomid) {
 		var xhr = new xmlhttprequest.XMLHttpRequest();
 		xhr.open('GET', `http${config.connection.https ? 's' : ''}://api.live.bilibili.com/room/v1/Room/room_init?id=${roomid}`, false);
 		xhr.send();
@@ -57,7 +57,12 @@ function LiveroomHandler() {
 			var root = JSON.parse(xhr.responseText);
 			if(root.code == 0){
 				var data = root.data;
-				return data.room_id;
+				var room_id = data.room_id;
+				var status = root.live_status;
+				return {
+					"trueId" : room_id,
+					"status" : status
+				}
 			}
 			else{
 				throw root.message;

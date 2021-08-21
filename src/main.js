@@ -31,6 +31,7 @@ var Room = function(){
 	var anchor_mid;// 主播mid
 	var database_name;// 数据库名称
 	var conn;// 数据库连接
+	var running;// 是否运行
 }
 
 var log = new Log();
@@ -80,6 +81,7 @@ async function main(){
 				for(var i = 0; i < conns.length; i ++){
 					if(conns[i].roomid == cmd){
 						conns[i].running = !conns[i].running;
+						conns[i].auto_stopped = false;
 						socket.write(getState());
 						return;
 					}
@@ -151,31 +153,50 @@ async function main(){
 		try{
 			var trueId;
 			var mid;
+			var running;
 			if(config.extra.room_check){
 				// 测试直播间可用性
 				liveroomHandler.testRoomAvailability(element);
 				log.v0(`第${currentRoom}个直播间检查通过`);
 				sleep();// 请求间隔
-				// 获取真实id
-				trueId = liveroomHandler.getTrueId(element);
+				// 获取真实id和状态
+				var root = liveroomHandler.getTrueId(element);
+				trueId = root.trueId;
+				var status = root.status;
+				var status_str;
+				if(status == 1){
+					status_str = "直播中";
+					running = true;
+				}
+				else if(status == 2){
+					status_str = "轮播中";
+					running = false;
+				}
+				else{
+					status_str = "未开播";
+					running = false;
+				}
 				log.v0(`第${currentRoom}个直播间的真实id为${trueId}`);
 				sleep();
 				// 获取主播信息
 				mid = liveroomHandler.getMid(trueId);
 				var data = liveroomHandler.getAnchorInfo(mid);
-				log.v0(`直播间#${currentRoom}    主播：${data.info.uname}（mid:${mid}）    ${data.info.official_verify.num == -1 ? '' : '√认证主播    '}等级：${data.exp.master_level.level}`);
+				log.v0(`直播间#${currentRoom}    主播：${data.info.uname}（mid:${mid}）    ${data.info.official_verify.num == -1 ? '' : '√认证主播    '}等级：${data.exp.master_level.level}    状态：${status_str}`);
 				log.v0(`粉丝勋章：${data.medal_name}    粉丝数：${data.follower_num}    公告：${data.room_news.content}`);
 				sleep();
 			}
 			else{
+				// 未启用直播校验
 				trueId = element;
 				mid = 0;
+				running = true;
 				log.v0("已跳过房间校验");
 			}
 			// 构造Room对象
 			var room = new Room();
 			room.roomid = trueId;
 			room.anchor_mid = mid;
+			room.running = running;
 			// 检查是否重复
 			var flag = false;
 			rooms.forEach(function(element){
@@ -290,7 +311,7 @@ async function main(){
 							await database.query(rooms[i].conn, `DROP DATABASE ${rooms[i].database_name};`);
 							log.v1(`直播间${rooms[i].roomid}：已删除原数据库`);
 						}
-						else if(config.database.what_to_do_when_existing.toUpperCase() == "NEW"){debugger
+						else if(config.database.what_to_do_when_existing.toUpperCase() == "NEW"){
 							// 追加随机字符
 							var string = '';
 							for(var k = 0; k < 8; k ++){
@@ -403,7 +424,12 @@ async function main(){
 	log.v0(`您已${config.connection.doKeep ? "开启" : "关闭"}断线重连功能`);
 	for (var i = 0; i < rooms.length; i ++){
 		var live_conn = new Connection();
-		await live_conn.create(rooms[i].roomid, rooms[i].anchor_mid, database, rooms[i].conn, true);
+		// 是否立即开始监控
+		var running = true;
+		if(config.extra.live_only && !rooms[i].running){
+			running = false;
+		}
+		await live_conn.create(rooms[i].roomid, rooms[i].anchor_mid, database, rooms[i].conn, running);
 		live_conn.init();
 		conns.push(live_conn);
 	}
@@ -423,7 +449,17 @@ function rnd(){
 function getState(){
 	var string = "直播间监控列表\n";
 	for(var i = 0; i < conns.length; i ++){
-		string += `直播间#${i + 1}    房间号：${conns[i].roomid}    状态：${conns[i].running ? "运行中" : "已暂停"}    事件数： ${conns[i].recorded_events}\n`;
+		var status;
+		if(conns[i].auto_stopped){
+			status = "已自动停止"
+		}
+		else if(conns[i].running){
+			status = "运行中"
+		}
+		else{
+			status = "已暂停"
+		}
+		string += `直播间#${i + 1}    房间号：${conns[i].roomid}    状态：${status}    事件数： ${conns[i].recorded_events}\n`;
 	}
 	return string;
 }
