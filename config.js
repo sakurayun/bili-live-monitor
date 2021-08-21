@@ -171,7 +171,7 @@ var config = {
 	// 钉钉通知，更多信息参见README文档，通知重要日志和统计数据
 	"dingtalk" : {
 		// 是否启用钉钉通知
-		"enabled" : true,
+		"enabled" : false,
 		
 		// Webhook地址
 		// 例如：https://oapi.dingtalk.com/robot/send?access_token=XXXXXX
@@ -184,7 +184,7 @@ var config = {
 	// 邮件通知，更多信息参见README文档，仅通知统计数据
 	"email" : {
 		// 是否启用邮件通知
-		"enabled" : true,
+		"enabled" : false,
 		
 		// 发送邮箱
 		"email_from" : "",
@@ -197,10 +197,10 @@ var config = {
 		"password" : "",
 		
 		// 接收邮箱，支持多个。填空字符串则发送给自己
-		"email_to" : [""],
+		"email_to" : "",
 		
 		// 统计信息发送间隔，单位为分钟，不小于5
-		"time" : 360
+		"interval" : 360
 	}
 }
 

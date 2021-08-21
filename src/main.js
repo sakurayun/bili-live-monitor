@@ -452,6 +452,14 @@ async function main(){
 			log.v2("\n钉钉通知过于频繁，已禁用钉钉通知。");
 		}
 	}
+	if(config.email.enabled){
+		if(config.email.interval >= 5){
+			setInterval(autoNotifyViaEmail, config.email.interval * 60000);
+		}
+		else{
+			log.v2("\n邮件通知过于频繁，已禁用邮件通知。");
+		}
+	}
 	log.v2("\n所有监控已设立完毕。");
 	log.v2("请使用“npm run console”安全退出，避免数据丢失");
 }
@@ -518,6 +526,64 @@ function autoNotifyViaDingTalk(){
 	notification.notifyViaDingTalk(string);
 }
 
+// 邮件自动通知
+function autoNotifyViaEmail(){
+	// HTML代码
+	var html = '<style type="text/css">@charset"utf-8";.tabtop13{margin-top:13px}.tabtop13 td{background-color:#ffffff;height:25px;line-height:150%}.font-center{text-align:center}.btbg{background:#e9faff!important}.btbg1{background:#f2fbfe!important}.btbg2{background:#f3f3f3!important}.biaoti{font-family:微软雅黑;font-size:26px;font-weight:bold;border-bottom:1px dashed#CCCCCC;color:#255e95}.titfont{font-family:微软雅黑;font-size:16px;font-weight:bold;color:#255e95;background-color:#e9faff}</style><table width="100%"border="0"cellspacing="0"cellpadding="0"align="center"><tr><td align="center"class="biaoti"height="60">bili-live-monitor&nbsp;实时监控数据</td></tr><tr><td align="right"height="25">';
+	var time_now = Date.now();
+	var time_before = new Date(time_now - config.email.interval * 60000).getTime();
+	var date1 = formatDateStr(time_before);
+	var date2 = formatDateStr(time_now);
+	var time1 = formatTimeStr(time_before);
+	var time2 = formatTimeStr(time_now);
+	var time_str;
+	if(date1 == date2){
+		time_str = `统计时间：${date1}&nbsp;${time1}~${time2}`;
+	}
+	else{
+		time_str = `统计时间：${date1}&nbsp;${time1}~${date2}&nbsp;${time2}`;
+	}
+	html += time_str;
+	html += '</td></tr></table><table width="100%"border="0"cellspacing="1"cellpadding="4"bgcolor="#cccccc"class="tabtop13"align="center"><tr><td class="btbg font-center titfont">房间号</td><td class="btbg font-center titfont">主播名</td><td class="btbg font-center titfont">状态</td><td class="btbg font-center titfont">弹幕数</td><td class="btbg font-center titfont">入场数</td><td class="btbg font-center titfont">礼物数</td><td class="btbg font-center titfont">事件数</td></tr>';
+	var total_danmaku = 0;
+	var total_welcome = 0;
+	var total_gifts = 0;
+	var total_events = 0;
+	for(var i = 0; i < conns.length; i ++){
+		var line = '<tr>';
+		line += `<td class="btbg1 font-center">${conns[i].roomid}</td>`;
+		line += `<td class="btbg2 font-center">${rooms[i].anchor_name}</td>`;
+		var status;
+		if(conns[i].auto_stopped){
+			status = "已自动停止";
+		}
+		else if(conns[i].running){
+			status = "运行中";
+		}
+		else{
+			status = "已暂停";
+		}
+		line += `<td class="font-center">${status}</td>`;
+		line += `<td class="font-center">${conns[i].statistics_email.danmaku}</td>`;
+		total_danmaku += conns[i].statistics_email.danmaku;
+		conns[i].statistics_email.danmaku = 0;
+		line += `<td class="font-center">${conns[i].statistics_email.welcome_msg}</td>`;
+		total_welcome += conns[i].statistics_email.welcome_msg;
+		conns[i].statistics_email.welcome_msg = 0;
+		line += `<td class="font-center">${conns[i].statistics_email.gifts}</td>`;
+		total_gifts += conns[i].statistics_email.gifts;
+		conns[i].statistics_email.gifts = 0;
+		line += `<td class="font-center">${conns[i].statistics_email.json}</td>`;
+		total_events += conns[i].statistics_email.json;
+		conns[i].statistics_email.json = 0;
+		line += '</tr>';
+		html += line;
+	}
+	html += `<tr><td class="btbg1 font-center">总计</td><td class="btbg2 font-center"></td><td class="font-center"></td><td class="font-center">${total_danmaku}</td><td class="font-center">${total_welcome}</td><td class="font-center">${total_gifts}</td><td class="font-center">${total_events}</td></tr></table>`;
+	notification.notifyViaEmail("bili-live-monitor 实时监控数据", html);
+}
+
+
 // 销毁已有的连接
 function finishConns(){
 	rooms.forEach(function(ele){
@@ -544,6 +610,23 @@ function getTimeStr(){
     var mm = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes());
     var ss = (date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds());
     return '' + hh + mm + ss;
+}
+// 获取标准格式日期
+function formatDateStr(date){
+	var date = new Date(date);
+    var YY = date.getFullYear();
+    var MM = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1);
+    var DD = (date.getDate() < 10 ? '0' + (date.getDate()) : date.getDate());
+    return  YY + '-' + MM + '-' + DD ;
+}
+
+// 获取标准格式时间
+function formatTimeStr(date){
+	var date = new Date(date);
+    var hh = (date.getHours() < 10 ? '0' + date.getHours() : date.getHours());
+    var mm = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes());
+    var ss = (date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds());
+    return hh + ':' + mm + ':' + ss;
 }
 
 // 请求间隔（同步）

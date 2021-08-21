@@ -43,6 +43,32 @@ exports.notifyViaDingTalk = function(msg){
 }
 
 // 邮件通知
-exports.notifyViaEmail = function(msg){
-	
+exports.notifyViaEmail = function(subject, msg){
+	var transporter = nodemailer.createTransport({
+		host : config.email.smtp,
+		auth : {
+			user : config.email.email_from,
+			pass : config.email.password
+		}
+	});
+	var mail_to = config.email.email_from;
+	if(config.email.email_to != ""){
+		mail_to = config.email.email_to;
+	}
+	var mailOptions = {
+		from : config.email.email_from,
+		to : mail_to,
+		subject : subject,
+		html : msg
+	}
+	try{
+		transporter.sendMail(mailOptions, function(err, info){
+			if(error){
+				log.v2(`发送邮件错误：${error}`);
+			}
+		});
+	}
+	catch(e){
+		log.v2(`发送邮件错误：${e}`);
+	}
 }
