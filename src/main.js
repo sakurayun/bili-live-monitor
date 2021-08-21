@@ -149,17 +149,29 @@ async function main(){
 			return;
 		}
 		try{
-			// 测试直播间可用性
-			liveroomHandler.testRoomAvailability(element);
-			log.v0(`第${currentRoom}个直播间检查通过`);
-			// 获取真实id
-			var trueId = liveroomHandler.getTrueId(element);
-			log.v0(`第${currentRoom}个直播间的真实id为${trueId}`);
-			// 获取主播信息
-			var mid = liveroomHandler.getMid(trueId);
-			var data = liveroomHandler.getAnchorInfo(mid);
-			log.v0(`直播间#${currentRoom}    主播：${data.info.uname}（mid:${mid}）    ${data.info.official_verify.num == -1 ? '' : '√认证主播    '}等级：${data.exp.master_level.level}`);
-			log.v0(`粉丝勋章：${data.medal_name}    粉丝数：${data.follower_num}    公告：${data.room_news.content}`);
+			var trueId;
+			var mid;
+			if(config.extra.room_check){
+				// 测试直播间可用性
+				liveroomHandler.testRoomAvailability(element);
+				log.v0(`第${currentRoom}个直播间检查通过`);
+				sleep();// 请求间隔
+				// 获取真实id
+				trueId = liveroomHandler.getTrueId(element);
+				log.v0(`第${currentRoom}个直播间的真实id为${trueId}`);
+				sleep();
+				// 获取主播信息
+				mid = liveroomHandler.getMid(trueId);
+				var data = liveroomHandler.getAnchorInfo(mid);
+				log.v0(`直播间#${currentRoom}    主播：${data.info.uname}（mid:${mid}）    ${data.info.official_verify.num == -1 ? '' : '√认证主播    '}等级：${data.exp.master_level.level}`);
+				log.v0(`粉丝勋章：${data.medal_name}    粉丝数：${data.follower_num}    公告：${data.room_news.content}`);
+				sleep();
+			}
+			else{
+				trueId = element;
+				mid = 0;
+				log.v0("已跳过房间校验");
+			}
 			// 构造Room对象
 			var room = new Room();
 			room.roomid = trueId;
@@ -329,6 +341,9 @@ async function main(){
 					log.v0(`直播间${rooms[i].roomid}：根据您的要求，popularity未创建`);
 				}
 				if(config.data.followers){
+					if(!config.extra.room_check){
+						throw "禁用房间校验时，不能启用粉丝数监控";
+					}
 					await database.query(rooms[i].conn, queries.followers);
 					log.v0(`直播间${rooms[i].roomid}：已新建或确认数据表followers`);
 				}
@@ -439,6 +454,22 @@ function getTimeStr(){
     var mm = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes());
     var ss = (date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds());
     return '' + hh + mm + ss;
+}
+
+// 请求间隔（同步）
+function sleep(){
+	var min_time = config.extra.interval_base - config.extra.interval_random;
+	if(min_time < 0){
+		min_time = 0;
+	}
+	var max_time = config.extra.interval_base + config.extra.interval_random;
+	var time = min_time + Math.floor(Math.random() * (max_time - min_time));
+	var start_time = Date.now();
+	while(true){
+		if(Date.now() - start_time >= time){
+			break;
+		}
+	}
 }
 
 // 导出模块
