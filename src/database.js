@@ -17,7 +17,8 @@ function Database(){
 			port : config.database.port,
 			password : config.database.password,
 			supportBigNumbers : true,// 支持大数字
-			connectionLimit : config.live_room.length// 设置最大连接数量
+			connectionLimit : config.live_room.length,// 设置最大连接数量
+			charset : config.database.utf8mb4 ? 'utf8mb4_general_ci' : 'utf8_general_ci'// 字符集
 		});
 	}
 	
