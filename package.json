@@ -1,6 +1,6 @@
 {
 	"name": "bili-live-monitor",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "监控哔哩哔哩直播间数据，并实时保存至数据库。",
 	"main": "bili-live-monitor.js",
 	"scripts": {

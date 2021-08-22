@@ -22,8 +22,6 @@
 
 </details>
 
-**如加载慢，可访问[镜像仓库](https://gitee.com/jellyblack/bili-live-monitor)。**
-
 ## 准备
 
 该项目依赖Node.js 7.6（V8版本 5.5）及以上版本。请确保已安装Node.js。运行`node --version`查看Node.js版本号。
