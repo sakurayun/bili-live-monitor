@@ -4,8 +4,8 @@
 	"description": "监控哔哩哔哩直播间数据，并实时保存至数据库。",
 	"main": "bili-live-monitor.js",
 	"scripts": {
-		"start": "node bili-live-monitor.js",
-		"console": "node monitor_console.js"
+		"start": "node src/main.js",
+		"console": "node src/monitor_console.js"
 	},
 	"repository": {
 		"type": "git",

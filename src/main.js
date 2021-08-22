@@ -469,6 +469,9 @@ async function main(){
 	log.v2("请使用“npm run console”安全退出，避免数据丢失");
 }
 
+// 入口
+main();
+
 // 生成随机数字
 function rnd(){
 	return Math.floor(Math.random() * 10);
