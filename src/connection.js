@@ -380,7 +380,7 @@ function Connection(){
 				}
 				if(config.database.enable_database){
 					this.buffer.fans_medal.push([anchor_room_id, anchor_name, medal_name]);
-					this.buffer.users_from_superchat.push([user_mid, username, is_admin, is_main_vip, is_vip, is_svip, anchor_room_id, medal_level, level, rank, title, guard_level]);
+					this.buffer.users_from_superchat.push([user_mid, username, is_admin, is_main_vip, is_vip, is_svip, anchor_room_id, medal_level, level, title, guard_level]);
 					this.buffer.superchat.push([origin_id, time, price, duration, user_mid, text, token]);
 				}
 			}
@@ -601,10 +601,10 @@ function task(){
 		// 醒目留言及用户
 		if(conn.buffer.superchat.length >= config.database.amount || conn.last_query.superchat >= config.database.sql_interval * 1000 && conn.buffer.superchat.length > 0){
 			if(config.extra.override){
-				conn.database.queryAsync(conn.roomid, conn.database_conn,'INSERT INTO users_from_superchat (user_mid, username, is_admin,  is_main_vip, is_vip, is_svip, medal, medal_level, level, rank, title, guard_level) VALUES ? ON DUPLICATE KEY UPDATE username=VALUES(username), is_admin=VALUES(is_admin), is_main_vip=VALUES(is_main_vip), is_vip=VALUES(is_vip), is_svip=VALUES(is_svip), medal=VALUES(medal), medal_level=VALUES(medal_level), level=VALUES(level), rank=VALUES(rank), title=VALUES(title), guard_level=VALUES(guard_level)' ,[conn.buffer.users_from_superchat.splice(0, conn.buffer.users_from_superchat.length)]);
+				conn.database.queryAsync(conn.roomid, conn.database_conn,'INSERT INTO users_from_superchat (user_mid, username, is_admin,  is_main_vip, is_vip, is_svip, medal, medal_level, level, title, guard_level) VALUES ? ON DUPLICATE KEY UPDATE username=VALUES(username), is_admin=VALUES(is_admin), is_main_vip=VALUES(is_main_vip), is_vip=VALUES(is_vip), is_svip=VALUES(is_svip), medal=VALUES(medal), medal_level=VALUES(medal_level), level=VALUES(level), title=VALUES(title), guard_level=VALUES(guard_level)' ,[conn.buffer.users_from_superchat.splice(0, conn.buffer.users_from_superchat.length)]);
 			}
 			else{
-				conn.database.queryAsync(conn.roomid, conn.database_conn,'INSERT IGNORE INTO users_from_superchat (user_mid, username, is_admin, is_main_vip, is_vip, is_svip, medal, medal_level, level, rank, title, guard_level) VALUES ?' ,[conn.buffer.users_from_superchat.splice(0, conn.buffer.users_from_superchat.length)]);
+				conn.database.queryAsync(conn.roomid, conn.database_conn,'INSERT IGNORE INTO users_from_superchat (user_mid, username, is_admin, is_main_vip, is_vip, is_svip, medal, medal_level, level, title, guard_level) VALUES ?' ,[conn.buffer.users_from_superchat.splice(0, conn.buffer.users_from_superchat.length)]);
 			}
 			conn.database.queryAsync(conn.roomid, conn.database_conn,'INSERT INTO superchat (origin_id, time, price, duration, user_mid, text, token) VALUES ?' ,[conn.buffer.superchat.splice(0, conn.buffer.superchat.length)]);
 			conn.last_query.superchat=0;
