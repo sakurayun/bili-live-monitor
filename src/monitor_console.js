@@ -4,7 +4,7 @@
  */
 var config;
 try{
-	config = require('./config');
+	config = require('../config');
 }
 catch(e){
 	// config.js有语法错误

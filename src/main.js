@@ -20,6 +20,7 @@ const Log = require('./log');
 const Database = require('./database');
 const Connection = require('./connection');
 const LiveroomHandler = require('./liveroom_handler');
+const notification = require('./notification');
 const queries = require('./queries');
 
 // 监控直播间的id列表
@@ -29,8 +30,10 @@ var rooms = [];
 var Room = function(){
 	var roomid;// 房间号
 	var anchor_mid;// 主播mid
+	var anchor_name;// 主播用户名
 	var database_name;// 数据库名称
 	var conn;// 数据库连接
+	var running;// 是否运行
 }
 
 var log = new Log();
@@ -80,6 +83,7 @@ async function main(){
 				for(var i = 0; i < conns.length; i ++){
 					if(conns[i].roomid == cmd){
 						conns[i].running = !conns[i].running;
+						conns[i].auto_stopped = false;
 						socket.write(getState());
 						return;
 					}
@@ -110,6 +114,7 @@ async function main(){
 						log.v0(`已安全关闭直播间${conns[i].roomid}的连接`);
 					}
 					log.v2("已安全退出监控");
+					notification.notifyViaDingTalk("已安全退出监控。");
 					socket.write("已安全退出监控\n");
 					socket.write("/disconnect");// 请求客户端断开连接
 					setTimeout(() => {process.exit(0);}, 1000);
@@ -133,6 +138,11 @@ async function main(){
 		log.v0(`在${config.extra.console_port}端口上侦听控制台连接`);
 	});
 	
+	// 桥头麻袋，让“侦听控制台连接”的日志先打印
+	await new Promise((resolve, reject) => {
+		setTimeout(resolve(), 1);
+	});
+	
 	// 检查要监控的直播间
 	log.v1("正在检查待监控的直播间");
 	if(config.live_room.length == 0){
@@ -140,30 +150,65 @@ async function main(){
 		process.exit(0);
 	}
 	
-	var currentRoom = 0; //当前检查的房间
-	config.live_room.forEach(function(element){
-		currentRoom ++;
+	for(var i = 0; i < config.live_room.length; i ++){
+		var currentRoom = i + 1; //当前检查的房间
+		var element = config.live_room[i];
 		log.v0(`正在检查第${currentRoom}个直播间配置`);
 		if(element <= 0){
 			log.v0(`第${currentRoom}个直播间未配置，已跳过\n`);
 			return;
 		}
 		try{
-			// 测试直播间可用性
-			liveroomHandler.testRoomAvailability(element);
-			log.v0(`第${currentRoom}个直播间检查通过`);
-			// 获取真实id
-			var trueId = liveroomHandler.getTrueId(element);
-			log.v0(`第${currentRoom}个直播间的真实id为${trueId}`);
-			// 获取主播信息
-			var mid = liveroomHandler.getMid(trueId);
-			var data = liveroomHandler.getAnchorInfo(mid);
-			log.v0(`直播间#${currentRoom}    主播：${data.info.uname}（mid:${mid}）    ${data.info.official_verify.num == -1 ? '' : '√认证主播    '}等级：${data.exp.master_level.level}`);
-			log.v0(`粉丝勋章：${data.medal_name}    粉丝数：${data.follower_num}    公告：${data.room_news.content}`);
+			var trueId;
+			var mid;
+			var anchor_name;
+			var running;
+			if(config.extra.room_check){
+				// 测试直播间可用性
+				liveroomHandler.testRoomAvailability(element);
+				log.v0(`第${currentRoom}个直播间检查通过`);
+				await sleep();// 请求间隔
+				// 获取真实id和状态
+				var root = liveroomHandler.getTrueIdAndStatus(element);
+				trueId = root.trueId;
+				var status = root.status;
+				var status_str;
+				if(status == 1){
+					status_str = "直播中";
+					running = true;
+				}
+				else if(status == 2){
+					status_str = "轮播中";
+					running = false;
+				}
+				else{
+					status_str = "未开播";
+					running = false;
+				}
+				log.v0(`第${currentRoom}个直播间的真实id为${trueId}`);
+				await sleep();
+				// 获取主播信息
+				mid = liveroomHandler.getMid(trueId);
+				var data = liveroomHandler.getAnchorInfo(mid);
+				anchor_name = data.info.uname;
+				log.v0(`直播间#${currentRoom}    主播：${data.info.uname}（mid:${mid}）    ${data.info.official_verify.num == -1 ? '' : '√认证主播    '}等级：${data.exp.master_level.level}    状态：${status_str}`);
+				log.v0(`粉丝勋章：${data.medal_name}    粉丝数：${data.follower_num}    公告：${data.room_news.content}`);
+				await sleep();
+			}
+			else{
+				// 未启用直播校验
+				trueId = element;
+				mid = 0;
+				anchor_name = "未知";
+				running = true;
+				log.v0("已跳过房间校验");
+			}
 			// 构造Room对象
 			var room = new Room();
 			room.roomid = trueId;
 			room.anchor_mid = mid;
+			room.anchor_name = anchor_name;
+			room.running = running;
 			// 检查是否重复
 			var flag = false;
 			rooms.forEach(function(element){
@@ -184,7 +229,7 @@ async function main(){
 			log.v2(`第${currentRoom}个直播间出错：${e}\n`);
 			return;
 		}
-	});
+	}
 	// 没有任何直播间，则退出
 	if(rooms.length == 0){
 		log.v2("没有配置任何直播间，已终止运行。请检查config.js文件。");
@@ -278,7 +323,7 @@ async function main(){
 							await database.query(rooms[i].conn, `DROP DATABASE ${rooms[i].database_name};`);
 							log.v1(`直播间${rooms[i].roomid}：已删除原数据库`);
 						}
-						else if(config.database.what_to_do_when_existing.toUpperCase() == "NEW"){debugger
+						else if(config.database.what_to_do_when_existing.toUpperCase() == "NEW"){
 							// 追加随机字符
 							var string = '';
 							for(var k = 0; k < 8; k ++){
@@ -329,11 +374,38 @@ async function main(){
 					log.v0(`直播间${rooms[i].roomid}：根据您的要求，popularity未创建`);
 				}
 				if(config.data.followers){
+					if(!config.extra.room_check){
+						throw "禁用房间校验时，不能启用粉丝数监控";
+					}
 					await database.query(rooms[i].conn, queries.followers);
 					log.v0(`直播间${rooms[i].roomid}：已新建或确认数据表followers`);
 				}
 				else{
 					log.v0(`直播间${rooms[i].roomid}：根据您的要求，followers未创建`);
+				}
+				if(config.data.new_guards){
+					await database.query(rooms[i].conn, queries.new_guards);
+					log.v0(`直播间${rooms[i].roomid}：已新建或确认数据表new_guards`);
+				}
+				else{
+					log.v0(`直播间${rooms[i].roomid}：根据您的要求，new_guards未创建`);
+				}
+				if(config.data.entry_effect){
+					await database.query(rooms[i].conn, queries.entry_effect);
+					log.v0(`直播间${rooms[i].roomid}：已新建或确认数据表entry_effect`);
+				}
+				else{
+					log.v0(`直播间${rooms[i].roomid}：根据您的要求，entry_effect未创建`);
+				}
+				if(config.data.superchat){
+					await database.query(rooms[i].conn, queries.superchat);
+					log.v0(`直播间${rooms[i].roomid}：已新建或确认数据表superchat`);
+					await database.query(rooms[i].conn, queries.users_from_superchat);
+					log.v0(`直播间${rooms[i].roomid}：已新建或确认数据表users_from_superchat`);
+				}
+				else{
+					log.v0(`直播间${rooms[i].roomid}：根据您的要求，superchat未创建`);
+					log.v0(`直播间${rooms[i].roomid}：根据您的要求，users_from_superchat未创建`);
 				}
 				if(config.data.json){
 					await database.query(rooms[i].conn, queries.json);
@@ -364,16 +436,41 @@ async function main(){
 	log.v0(`您已${config.connection.doKeep ? "开启" : "关闭"}断线重连功能`);
 	for (var i = 0; i < rooms.length; i ++){
 		var live_conn = new Connection();
-		await live_conn.create(rooms[i].roomid, rooms[i].anchor_mid, database, rooms[i].conn, true);
+		// 是否立即开始监控
+		var running = true;
+		if(config.extra.live_only && !rooms[i].running){
+			running = false;
+		}
+		await live_conn.create(rooms[i].roomid, rooms[i].anchor_mid, database, rooms[i].conn, running);
 		live_conn.init();
 		conns.push(live_conn);
 	}
 	
 	// 此处已全部准备完毕
 	all_ready = true;
+	notification.notifyViaDingTalk("所有监控已设立完毕。");
+	if(config.dingtalk.enabled){
+		if(config.dingtalk.interval >= 1){
+			setInterval(autoNotifyViaDingTalk, config.dingtalk.interval * 60000);
+		}
+		else{
+			log.v2("\n钉钉通知过于频繁，已禁用钉钉通知。");
+		}
+	}
+	if(config.email.enabled){
+		if(config.email.interval >= 5){
+			setInterval(autoNotifyViaEmail, config.email.interval * 60000);
+		}
+		else{
+			log.v2("\n邮件通知过于频繁，已禁用邮件通知。");
+		}
+	}
 	log.v2("\n所有监控已设立完毕。");
 	log.v2("请使用“npm run console”安全退出，避免数据丢失");
 }
+
+// 入口
+main();
 
 // 生成随机数字
 function rnd(){
@@ -384,10 +481,116 @@ function rnd(){
 function getState(){
 	var string = "直播间监控列表\n";
 	for(var i = 0; i < conns.length; i ++){
-		string += `直播间#${i + 1}    房间号：${conns[i].roomid}    状态：${conns[i].running ? "运行中" : "已暂停"}    事件数： ${conns[i].recorded_events}\n`;
+		var status;
+		if(conns[i].auto_stopped){
+			status = "已自动停止";
+		}
+		else if(conns[i].running){
+			status = "运行中";
+		}
+		else{
+			status = "已暂停";
+		}
+		string += `直播间#${i + 1}  ${rooms[i].anchor_name}  房间号：${conns[i].roomid}  状态：${status}  事件数：${conns[i].recorded_events}\n`;
 	}
 	return string;
 }
+
+// 钉钉定时通知
+var last_recorded_events = [];
+function autoNotifyViaDingTalk(){
+	var string = "过去";
+	if(config.dingtalk.interval >= 60){
+		var hour = Math.floor(config.dingtalk.interval / 60);
+		string += `${hour}小时`;
+	}
+	var minute = config.dingtalk.interval % 60;
+	if(minute != 0){
+		string += `${minute}分钟`;
+	}
+	string += "的监控数据\n";
+	
+	for(var i = 0; i < conns.length; i ++){
+		var events;
+		if(last_recorded_events.length == i){
+			last_recorded_events.push(conns[i].recorded_events);
+			events = conns[i].recorded_events;
+		}
+		else{
+			events = conns[i].recorded_events - last_recorded_events[i];
+		}
+		var status;
+		if(conns[i].auto_stopped){
+			status = "已自动停止";
+		}
+		else if(conns[i].running){
+			status = "运行中";
+		}
+		else{
+			status = "已暂停";
+		}
+		string += `直播间#${i + 1}  ${rooms[i].anchor_name}  房间号：${conns[i].roomid}  状态：${status}  事件数：${events}${i == conns.length -1 ? "" : "\n"}`;
+	}
+	notification.notifyViaDingTalk(string);
+}
+
+// 邮件自动通知
+function autoNotifyViaEmail(){
+	// HTML代码
+	var html = '<style type="text/css">@charset"utf-8";.tabtop13{margin-top:13px}.tabtop13 td{background-color:#ffffff;height:25px;line-height:150%}.font-center{text-align:center}.btbg{background:#e9faff!important}.btbg1{background:#f2fbfe!important}.btbg2{background:#f3f3f3!important}.biaoti{font-family:微软雅黑;font-size:26px;font-weight:bold;border-bottom:1px dashed#CCCCCC;color:#255e95}.titfont{font-family:微软雅黑;font-size:16px;font-weight:bold;color:#255e95;background-color:#e9faff}</style><table width="100%"border="0"cellspacing="0"cellpadding="0"align="center"><tr><td align="center"class="biaoti"height="60">bili-live-monitor&nbsp;实时监控数据</td></tr><tr><td align="right"height="25">';
+	var time_now = Date.now();
+	var time_before = new Date(time_now - config.email.interval * 60000).getTime();
+	var date1 = formatDateStr(time_before);
+	var date2 = formatDateStr(time_now);
+	var time1 = formatTimeStr(time_before);
+	var time2 = formatTimeStr(time_now);
+	var time_str;
+	if(date1 == date2){
+		time_str = `统计时间：${date1}&nbsp;${time1}~${time2}`;
+	}
+	else{
+		time_str = `统计时间：${date1}&nbsp;${time1}~${date2}&nbsp;${time2}`;
+	}
+	html += time_str;
+	html += '</td></tr></table><table width="100%"border="0"cellspacing="1"cellpadding="4"bgcolor="#cccccc"class="tabtop13"align="center"><tr><td class="btbg font-center titfont">房间号</td><td class="btbg font-center titfont">主播名</td><td class="btbg font-center titfont">状态</td><td class="btbg font-center titfont">弹幕数</td><td class="btbg font-center titfont">入场数</td><td class="btbg font-center titfont">礼物数</td><td class="btbg font-center titfont">事件数</td></tr>';
+	var total_danmaku = 0;
+	var total_welcome = 0;
+	var total_gifts = 0;
+	var total_events = 0;
+	for(var i = 0; i < conns.length; i ++){
+		var line = '<tr>';
+		line += `<td class="btbg1 font-center">${conns[i].roomid}</td>`;
+		line += `<td class="btbg2 font-center">${rooms[i].anchor_name}</td>`;
+		var status;
+		if(conns[i].auto_stopped){
+			status = "已自动停止";
+		}
+		else if(conns[i].running){
+			status = "运行中";
+		}
+		else{
+			status = "已暂停";
+		}
+		line += `<td class="font-center">${status}</td>`;
+		line += `<td class="font-center">${conns[i].statistics_email.danmaku}</td>`;
+		total_danmaku += conns[i].statistics_email.danmaku;
+		conns[i].statistics_email.danmaku = 0;
+		line += `<td class="font-center">${conns[i].statistics_email.welcome_msg}</td>`;
+		total_welcome += conns[i].statistics_email.welcome_msg;
+		conns[i].statistics_email.welcome_msg = 0;
+		line += `<td class="font-center">${conns[i].statistics_email.gifts}</td>`;
+		total_gifts += conns[i].statistics_email.gifts;
+		conns[i].statistics_email.gifts = 0;
+		line += `<td class="font-center">${conns[i].statistics_email.json}</td>`;
+		total_events += conns[i].statistics_email.json;
+		conns[i].statistics_email.json = 0;
+		line += '</tr>';
+		html += line;
+	}
+	html += `<tr><td class="btbg1 font-center">总计</td><td class="btbg2 font-center"></td><td class="font-center"></td><td class="font-center">${total_danmaku}</td><td class="font-center">${total_welcome}</td><td class="font-center">${total_gifts}</td><td class="font-center">${total_events}</td></tr></table>`;
+	notification.notifyViaEmail("bili-live-monitor 实时监控数据", html);
+}
+
 
 // 销毁已有的连接
 function finishConns(){
@@ -415,6 +618,38 @@ function getTimeStr(){
     var mm = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes());
     var ss = (date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds());
     return '' + hh + mm + ss;
+}
+// 获取标准格式日期
+function formatDateStr(date){
+	var date = new Date(date);
+    var YY = date.getFullYear();
+    var MM = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1);
+    var DD = (date.getDate() < 10 ? '0' + (date.getDate()) : date.getDate());
+    return  YY + '-' + MM + '-' + DD ;
+}
+
+// 获取标准格式时间
+function formatTimeStr(date){
+	var date = new Date(date);
+    var hh = (date.getHours() < 10 ? '0' + date.getHours() : date.getHours());
+    var mm = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes());
+    var ss = (date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds());
+    return hh + ':' + mm + ':' + ss;
+}
+
+// 请求间隔（同步）
+function sleep(){
+	var min_time = config.extra.interval_base - config.extra.interval_random;
+	if(min_time < 0){
+		min_time = 0;
+	}
+	var max_time = config.extra.interval_base + config.extra.interval_random;
+	var time = min_time + Math.floor(Math.random() * (max_time - min_time));
+	return new Promise((resolve, reject) => {
+		setTimeout(function(){
+			resolve();
+		}, time);
+	});
 }
 
 // 导出模块
