@@ -342,7 +342,7 @@ function Connection(){
 				var num = data.data.num;
 				var price = data.data.price;
 				var gift_name = data.data.gift_name;
-				var time = formatDate(data.data.start_time);
+				var time = formatDate(data.data.start_time * 1000);
 				if(config.log.log_level == 0){
 					log.verbose(this.roomid, `  ${username} 开通了${gift_name}`);
 				}
@@ -357,7 +357,7 @@ function Connection(){
 				var username = data.data.user_info.uname;
 				var guard_level = data.data.user_info.guard_level;
 				var price = data.data.price;
-				var time = formatDate(data.data.start_time);
+				var time = formatDate(data.data.start_time * 1000);
 				var origin_id = data.data.id;
 				var duration = data.data.time;
 				var anchor_room_id = data.data.medal_info.anchor_roomid;
