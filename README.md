@@ -4,18 +4,32 @@
 
 可部署至Windows, MacOS, Linux云服务器，甚至Android。
 
-**该项目仅用于学习和测试，请勿滥用。**
+**该项目仅用于学习和测试，请勿滥用。该项目处于测试版，以后可能有较大改动。**
 
-**该项目处于测试版，以后可能有较大改动。**
+**如加载慢，可访问[镜像仓库](https://gitee.com/jellyblack/bili-live-monitor)。**
+
+<details>
+    <summary>版本更新记录</summary>
+
+### 0.2.0
+- 支持更多监控项：购买舰长、入场效果、醒目留言
+- 添加请求间隔，防止触发412错误
+- 支持仅监控开播时的数据、关播则停止监控
+- 支持钉钉和邮件通知
+- 其他细节优化
+### 0.1.0
+第一个版本
+
+</details>
 
 ## 准备
 
 该项目依赖Node.js 7.6（V8版本 5.5）及以上版本。请确保已安装Node.js。运行`node --version`查看Node.js版本号。
 
-##### Windows/MacOS安装Node.js
+### Windows/MacOS安装Node.js
 前往Node.js官网（https://nodejs.org/zh-cn/ ）下载对应的安装包，安装即可。建议下载长期支持（LTS）版。
 
-##### Linux安装Node.js
+### Linux安装Node.js
 
 ```shell
 # 先cd到某个目录
@@ -28,7 +42,7 @@ ln -s ./bin/npm   /usr/local/bin/
 ln -s ./bin/node   /usr/local/bin/
 ```
 
-##### Android安装Node.js
+### Android安装Node.js
 
 访问以下链接下载Termux：https://f-droid.org/zh_Hans/packages/com.termux/
 
@@ -40,7 +54,7 @@ Termux是带有软件包的终端模拟器。打开Termux，执行`pkg install n
 
 **注意：最好在同一终端上运行监控和服务器，或两者处在同一内网。**
 
-##### Android安装MySQL
+### Android安装MySQL
 
 打开Termux，执行`pkg install mariadb`即可。
 
@@ -52,7 +66,7 @@ Termux是带有软件包的终端模拟器。打开Termux，执行`pkg install n
 
 ## 安装与运行
 
-##### 安装
+### 安装
 
 ```shell
 git clone https://github.com/JellyBlack/bili-live-monitor
@@ -60,13 +74,19 @@ cd bili-live-monitor
 npm install
 ```
 
-##### 配置
+或者从镜像仓库克隆：
 
-`bili-live-monitor`目录下有一个`config.js`文件，编辑以调整配置。文件内有详细注释。
+```shell
+git clone https://gitee.com/jellyblack/bili-live-monitor
+```
+
+### 配置
+
+项目根目录下有一个`config.js`文件，编辑以调整配置。文件内有详细注释。
 
 使用`git checkout config.js`以恢复默认配置。
 
-##### 运行
+### 运行
 
 ```shell
 npm start
@@ -76,19 +96,37 @@ npm start
 
 如果想在Android机上不间断地运行，须关闭省电优化等一系列设置，确保Termux始终运行。
 
-##### 管理
+### 管理
 
 运行`npm run console`进入监控控制台，可以安全停止监控。
 
 **一定要安全停止！** 使用Ctrl+C停止会丢失缓冲区的数据。
 
+## 通知
+bili-live-monitor支持钉钉通知和邮件通知，便于及时推送统计数据。
+### 钉钉通知
+
+在钉钉创建一个群聊，添加自定义机器人。官方文档地址：https://developers.dingtalk.com/document/robots/custom-robot-access 
+
+勾选“自定义关键词”安全设置，关键词填写“bili-live”或“monitor”。
+
+将Webhook地址填入config.js文件中。
+
+![钉钉通知效果（若无法加载请前往Gitee备份仓库）](assets/README/钉钉通知效果.jpg)
+
+### 邮件通知
+
+请参考config.js的注释进行设置。一般在邮箱的设置界面开启SMTP服务。邮件采用HTML格式。
+
+![邮件通知效果（若无法加载请前往Gitee备份仓库）](assets/README/邮件通知效果.jpg)
+
 ## 杂项
 
-#### 查看直播间房间号
+### 查看直播间房间号
 
-![房间号示例](assets/README/房间号示例.jpg)
+![房间号示例（若无法加载请前往Gitee备份仓库）](assets/README/房间号示例.jpg)
 
-#### 开发者
+### 开发者
 
 **JellyBlack**
 
