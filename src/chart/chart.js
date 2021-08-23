@@ -7,6 +7,8 @@ var option;
 var width = 60;
 var chart_type;
 var data;
+var request_combined = false;
+var source = "danmaku";
 $(function(){
 	// 获取可用的数据库列表
 	$.get("getDatabases", function(data, status){
@@ -42,18 +44,24 @@ function onChange(){
 	if(database_index == -1 || chart_type == "none"){
 		return;
 	}
-	$("#database_selector").attr("disabled", true);
-	$("#chart_selector").attr("disabled", true);
-	$("#width").attr("disabled", true);
-	$.get(`getData?database=${database_index}&chart=${chart_type}`, function(response, status){
+	setEnabled(false);
+	var url;
+	if(chart_type == "danmaku_sum" || chart_type == "danmaku_rank"){
+		url = `getData?database=${database_index}&chart=${chart_type}&combined=${request_combined}`
+	}
+	else if(chart_type == "medal_rank" || chart_type == "medal_level" || chart_type == "level"){
+		url = `getData?database=${database_index}&chart=${chart_type}&source=${source}`
+	}
+	else{
+		url = `getData?database=${database_index}&chart=${chart_type}}`
+	}
+	$.get(url, function(response, status){
 		if(status == "success"){
 			if(response.code == 0){
 				data = response.data;
-				if(data.length == 0){
+				if(data.length == 0 || (data.danmaku != undefined && data.danmaku.length == 0)){
 					alert("数据表中没有记录");
-					$("#database_selector").attr("disabled", false);
-					$("#chart_selector").attr("disabled", false);
-					$("#width").attr("disabled", false);
+					setEnabled(true);
 				}
 				else{
 					update(true);
@@ -61,31 +69,33 @@ function onChange(){
 			}
 			else if(response.code == -1){
 				alert("请求不合法");
-				$("#database_selector").attr("disabled", false);
-				$("#chart_selector").attr("disabled", false);
-				$("#width").attr("disabled", false);
+				setEnabled(true);
 			}
 			else if(response.code == -2){
 				alert("数据表不存在或格式异常");
-				$("#database_selector").attr("disabled", false);
-				$("#chart_selector").attr("disabled", false);
-				$("#width").attr("disabled", false);
+				setEnabled(true);
 			}
 		}
 		else{
 			alert("无法加载数据！");
-			$("#database_selector").attr("disabled", false);
-			$("#chart_selector").attr("disabled", false);
-			$("#width").attr("disabled", false);
+			setEnabled(true);
 		}
 	});
+}
+
+function setEnabled(boo){
+	$("#database_selector").attr("disabled", !boo);
+	$("#chart_selector").attr("disabled", !boo);
+	$("#width").attr("disabled", !boo);
+	$("#combination_selector").attr("disabled", !boo);
+	$("#source_selector").attr("disabled", !boo);
 }
 
 function update(doDispose){
 	if(echart != undefined && doDispose){
 		echart.dispose();
 	}
-	if(chart_type == "gifts" || chart_type == "welcome" || chart_type == "popularity" || chart_type == "followers" || chart_type == "superchat" || chart_type == "new_guards" || chart_type == "events" || chart_type == "entry_effect"){
+	if(chart_type == "gifts" || chart_type == "welcome" || chart_type == "popularity" || chart_type == "followers" || chart_type == "superchat" || chart_type == "new_guards" || chart_type == "events" || chart_type == "entry_effect" || chart_type == "danmaku_sum"){
 		var name;
 		var yAxisName;
 		var seriesName;
@@ -137,6 +147,12 @@ function update(doDispose){
 			yAxisName = "次数";
 			seriesName = "入场效果次数";
 			final_data = generateData(false);
+		}
+		else if(chart_type == "danmaku_sum"){
+			name = "弹幕数量折线图（合计）";
+			yAxisName = "条/秒";
+			seriesName = "发送速率（条/秒）";
+			final_data = generateData(true);
 		}
 		if(final_data.length == 0){
 			echart = echarts.init(document.getElementById('main'));
@@ -201,13 +217,122 @@ function update(doDispose){
 			]
 		}
 	}
+	else if(chart_type == "danmaku_rank"){
+		var category_num = data.rank.length;
+		var start_time = data.danmaku[0].time;
+		var end_time = data.danmaku[data.danmaku.length - 1].time;
+		var cursor = start_time;
+		var export_data = [];
+		var records = [];
+		for(var j = 0; j < category_num; j ++){
+			export_data.push([]);
+			records.push(0);
+		}
+		var i = 0;
+		while(cursor <= end_time){
+			for(; i < data.danmaku.length; i ++){
+				if(data.danmaku[i].time < cursor + width * 1000){
+					for(var j = 0; j < data.rank.length; j ++){
+						if(data.rank[j].text == data.danmaku[i].text){
+							records[j] += 1;
+							break;
+						}
+					}
+				}
+				else{
+					break;
+				}
+			}
+			for(var j = 0; j < data.rank.length; j ++){
+				export_data[j].push([ cursor, Math.round((records[j] / width) * 100) / 100 ]);
+				records[j] = 0;
+			}
+			cursor += width * 1000;
+		}
+		var series = [];
+		var string = "{";
+		for(var j = 0; j < data.rank.length; j ++){
+			series.push({
+				name : data.rank[j].text,
+				type : "line",
+				data : export_data[j]
+			});
+			var text = data.rank[j].text.replace(/'/g, "\\'");
+			if(j != data.rank.length - 1){
+				if(j < 10){
+					string += `'${text}':true,`;
+				}
+				else{
+					string += `'${text}':false,`;
+				}
+			}
+			else{
+				if(j < 10){
+					string += `'${text}':true`;
+				}
+				else{
+					string += `'${text}':false`;
+				}
+			}
+		}
+		string += "}";
+		var selected = eval("(" + string + ")");
+		option = {
+			title : {
+				text : "弹幕数量折线图（排行）"
+			},
+			xAxis : {
+				type : "time",
+				axisPointer : {
+					show : true
+				}
+			},
+			tooltip : {
+				show : true
+			},
+			toolbox : {
+				show : true,
+				feature : {
+					dataZoom : {
+						yAxisIndex : "none"
+					},
+					saveAsImage : {},
+					restore : {}
+				}
+			},
+			yAxis : {
+				type : "value",
+				name : "条/秒"
+			},
+			dataZoom : [
+				{
+					type : "inside"
+				},
+				{
+					type : "slider"
+				}
+			],
+			series : series,
+			legend : {
+				type : "scroll",
+				orient : "vertical",
+				left : "right",
+				top : "middle",
+				selected : selected
+			},
+			grid : {
+				right : "20%"
+			}
+		}
+	}
+	else if(chart_type == "danmaku_dynamic_rank"){
+		
+	}
 	if(doDispose){
 		echart = echarts.init(document.getElementById('main'));
 	}
 	echart.setOption(option);
-	$("#database_selector").attr("disabled", false);
-	$("#chart_selector").attr("disabled", false);
-	$("#width").attr("disabled", false);
+	setEnabled(true);
 }
 
 // 滑动条改变
@@ -227,6 +352,25 @@ function onWidthInput(){
 // 滑动条改变
 function onWidthChange(){
 	update(false);
+}
+
+function combinationOnChange(obj){
+	var index = obj.selectedIndex;
+	if(index = 0){
+		request_combined = false;
+	}
+	else{
+		request_combined = true;
+	}
+	alert("当前版本暂未实现");
+	onChange();
+}
+
+function sourceOnChange(obj){
+	var index = obj.selectedIndex;
+	var value = obj.options[index].value;
+	source = value;
+	onChange();
 }
 
 // 将滑动条的值转变为时间粒度

@@ -14,6 +14,12 @@
       </select>
       <select id="chart_selector" onchange="chartOnChange(this)">
         <option value ="none">选择图表类型</option>
+		<option value ="danmaku_sum">弹幕数量折线图（合计）</option>
+		<option value ="danmaku_rank">弹幕数量折线图（排行）</option>
+		<option value ="danmaku_dynamic_rank">动态弹幕数量排行</option>
+		<option value ="medal_rank">粉丝勋章排行</option>
+		<option value ="medal_level">粉丝勋章等级分布</option>
+		<option value ="level">直播间等级分布</option>
 		<option value ="gifts">送礼数量折线图</option>
 		<option value ="followers">粉丝数变化折线图</option>
 		<option value ="welcome">观众入场折线图</option>
@@ -22,6 +28,16 @@
 		<option value ="new_guards">购买舰长折线图</option>
 		<option value ="entry_effect">入场效果折线图</option>
 		<option value ="events">直播事件折线图</option>
+      </select>
+	  <select id="combination_selector" onchange="combinationOnChange(this)" disabled=true>
+        <option>数据源：未合并</option>
+		<option>数据源：已合并</option>
+      </select>
+	  <select id="source_selector" onchange="sourceOnChange(this)" disabled=true>
+        <option value ="danmaku">用户来源：弹幕</option>
+		<option value ="gifts">用户来源：礼物</option>
+		<option value ="welcome">用户来源：入场</option>
+		<option value ="superchat">用户来源：醒目留言</option>
       </select>
 	  <label>时间粒度</label>
 	  <input id="width" type="range" min="1" max="150" value="45" onchange="onWidthChange()" oninput="onWidthInput()" />

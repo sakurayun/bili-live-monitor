@@ -138,6 +138,19 @@ const server = http.createServer(async function(req, res){
 						else if(query.chart == "entry_effect"){
 							data = await database.query(conn, `SELECT 1 num, UNIX_TIMESTAMP(time) * 1000 time FROM entry_effect order by time;`);
 						}
+						else if(query.chart == "danmaku_sum"){
+							// TODO
+							data = await database.query(conn, `SELECT 1 num, UNIX_TIMESTAMP(time) * 1000 time FROM danmaku order by time;`);
+						}
+						else if(query.chart == "danmaku_rank"){
+							// TODO
+							danmaku = await database.query(conn, `SELECT text, UNIX_TIMESTAMP(time) * 1000 time FROM danmaku order by time;`);
+							rank = await database.query(conn, `SELECT text FROM danmaku group by text order by COUNT(*) DESC LIMIT 50;`);
+							data = {
+								danmaku : danmaku,
+								rank : rank
+							}
+						}
 						res.setHeader("Content-Type", "application/json");
 						res.end(JSON.stringify({
 							code : 0,
