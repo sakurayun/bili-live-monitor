@@ -23,6 +23,9 @@
 		<option value ="entry_effect">入场效果折线图</option>
 		<option value ="gifts">送礼数量折线图</option>
       </select>
+	  <label>时间粒度</label>
+	  <input id="width" type="range" min="1" max="150" value="45" onchange="onWidthChange()" oninput="onWidthInput()" />
+	  <label id="width_label">60秒</label>
     </div>
     <div id="main" style="width: 600px;height:400px;"></div>
   </body>

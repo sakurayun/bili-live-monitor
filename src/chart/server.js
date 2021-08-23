@@ -11,13 +11,13 @@ const config = require('../../config');
 
 var log = new Log();
 var databases = [];
+var database = new Database();
+var conn;
 
 async function main(){
 	// 访问数据库
 	log.v1(`正在获取数据库列表`);
-	var database = new Database();
 	var existing_dbs = [];
-	var conn;
 	var json = [];
 	try{
 		database.createPool();
@@ -27,7 +27,6 @@ async function main(){
 			existing_dbs.push(element.Database);
 		});
 		log.v1(`服务器的数据库列表：${existing_dbs}`);
-		conn.release();
 	}
 	catch(e){
 		log.v2(`数据库连接失败：${e}`);
@@ -87,9 +86,10 @@ async function main(){
 // 入口
 main();
 
-const server = http.createServer(function(req, res){
-	var obj = url.parse(req.url);
+const server = http.createServer(async function(req, res){
+	var obj = url.parse(req.url, true);
 	var pathname = obj.pathname;
+	var query = obj.query;
 	if(pathname == "/"){
 		res.setHeader("Content-Type", "text/html");
 		res.end(fs.readFileSync("chart.html"));
@@ -101,6 +101,52 @@ const server = http.createServer(function(req, res){
 	else if(pathname == "/getDatabases"){
 		res.setHeader("Content-Type", "application/json");
 		res.end(JSON.stringify(databases));
+	}
+	else if(pathname == "/getData"){
+		var error = JSON.stringify({
+			code : -1,
+			msg : "请求不合法"
+		});
+		if(query.database != null && query.chart != null){
+			if(/^[0-9]+$/.test(query.database)){
+				if(/^[A-Za-z0-9_]+$/.test(query.chart)){
+					// 通过防SQL注入校验
+					try{
+						await database.query(conn, `use ${databases[query.database].database_name}`);
+						var data;
+						if(query.chart == "gifts"){
+							data = await database.query(conn, `SELECT num, UNIX_TIMESTAMP(time) * 1000 time FROM gifts order by time;`);
+						}
+						res.setHeader("Content-Type", "application/json");
+						res.end(JSON.stringify({
+							code : 0,
+							msg : "",
+							data : data
+						}));
+					}
+					catch(e){
+						log.v2(e);
+						res.setHeader("Content-Type", "application/json");
+						res.end(JSON.stringify({
+							code : -2,
+							msg : e,
+						}));
+					}
+				}
+				else{
+					res.setHeader("Content-Type", "application/json");
+					res.end(error);
+				}
+			}
+			else{
+				res.setHeader("Content-Type", "application/json");
+				res.end(error);
+			}
+		}
+		else{
+			res.setHeader("Content-Type", "application/json");
+			res.end(error);
+		}
 	}
 	else{
 		res.setHeader("Content-Type", "text/plain");
