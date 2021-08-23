@@ -14,14 +14,14 @@
       </select>
       <select id="chart_selector" onchange="chartOnChange(this)">
         <option value ="none">选择图表类型</option>
+		<option value ="gifts">送礼数量折线图</option>
+		<option value ="followers">粉丝数变化折线图</option>
 		<option value ="welcome">观众入场折线图</option>
 		<option value ="popularity">人气变化折线图</option>
-		<option value ="followers">粉丝数变化折线图</option>
 		<option value ="superchat">醒目留言折线图</option>
 		<option value ="new_guards">购买舰长折线图</option>
-		<option value ="events">直播事件折线图</option>
 		<option value ="entry_effect">入场效果折线图</option>
-		<option value ="gifts">送礼数量折线图</option>
+		<option value ="events">直播事件折线图</option>
       </select>
 	  <label>时间粒度</label>
 	  <input id="width" type="range" min="1" max="150" value="45" onchange="onWidthChange()" oninput="onWidthInput()" />
