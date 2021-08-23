@@ -19,18 +19,14 @@ $(function(){
 			alert("无法加载数据库列表！");
 		}
 	});
-	
-	// 初始化ECharts
-	echart = echarts.init(document.getElementById('main'));
 });
 
-var database_index = 0;
-var chart_type = "";
+var database_index = -1;
+var chart_type = "none";
 
 function databaseOnChange(obj){
 	var index = obj.selectedIndex;
 	var value = obj.options[index].value;
-	console.log(`索引：${index}  值：${value}`);
 	database_index = index - 1;
 	onChange();
 }
@@ -38,37 +34,122 @@ function databaseOnChange(obj){
 function chartOnChange(obj){
 	var index = obj.selectedIndex;
 	var value = obj.options[index].value;
-	console.log(`索引：${index}  值：${value}`);
 	chart_type = value;
-	onChange(value);
+	onChange();
 }
 
-function onChange(value){
+function onChange(){
+	if(database_index == -1 || chart_type == "none"){
+		return;
+	}
+	$("#database_selector").attr("disabled", true);
+	$("#chart_selector").attr("disabled", true);
+	$("#width").attr("disabled", true);
 	$.get(`getData?database=${database_index}&chart=${chart_type}`, function(response, status){
 		if(status == "success"){
 			if(response.code == 0){
 				data = response.data;
-				update();
+				if(data.length == 0){
+					alert("数据表中没有记录");
+					$("#database_selector").attr("disabled", false);
+					$("#chart_selector").attr("disabled", false);
+					$("#width").attr("disabled", false);
+				}
+				else{
+					update(true);
+				}
 			}
-			else{
-				// TODO 处理异常
+			else if(response.code == -1){
+				alert("请求不合法");
+				$("#database_selector").attr("disabled", false);
+				$("#chart_selector").attr("disabled", false);
+				$("#width").attr("disabled", false);
+			}
+			else if(response.code == -2){
+				alert("数据表不存在或格式异常");
+				$("#database_selector").attr("disabled", false);
+				$("#chart_selector").attr("disabled", false);
+				$("#width").attr("disabled", false);
 			}
 		}
 		else{
 			alert("无法加载数据！");
+			$("#database_selector").attr("disabled", false);
+			$("#chart_selector").attr("disabled", false);
+			$("#width").attr("disabled", false);
 		}
 	});
 }
 
-function update(){
-	if(chart_type == "gifts"){
+function update(doDispose){
+	if(echart != undefined && doDispose){
+		echart.dispose();
+	}
+	if(chart_type == "gifts" || chart_type == "welcome" || chart_type == "popularity" || chart_type == "followers" || chart_type == "superchat" || chart_type == "new_guards" || chart_type == "events" || chart_type == "entry_effect"){
+		var name;
+		var yAxisName;
+		var seriesName;
+		var final_data;
+		if(chart_type == "gifts"){
+			name = "送礼数量折线图";
+			yAxisName = "件/秒";
+			seriesName = "送礼数量（件/秒）";
+			final_data = generateData(true);
+		}
+		else if(chart_type == "welcome"){
+			name = "观众入场折线图";
+			yAxisName = "人/秒";
+			seriesName = "入场数量（人/秒）";
+			final_data = generateData(true);
+		}
+		else if(chart_type == "popularity"){
+			name = "人气变化折线图";
+			yAxisName = "人气";
+			seriesName = "人气";
+			final_data = data;
+		}
+		else if(chart_type == "followers"){
+			name = "粉丝数变化折线图";
+			yAxisName = "粉丝数";
+			seriesName = "粉丝数";
+			final_data = data;
+		}
+		else if(chart_type == "superchat"){
+			name = "醒目留言折线图";
+			yAxisName = "数量";
+			seriesName = "醒目留言数量";
+			final_data = generateData(false);
+		}
+		else if(chart_type == "new_guards"){
+			name = "购买舰长折线图";
+			yAxisName = "舰长人数";
+			seriesName = "舰长人数";
+			final_data = generateData(false);
+		}
+		else if(chart_type == "events"){
+			name = "直播事件折线图";
+			yAxisName = "个/秒";
+			seriesName = "事件数量（个/秒）";
+			final_data = generateData(true);
+		}
+		else if(chart_type == "entry_effect"){
+			name = "入场效果折线图";
+			yAxisName = "次数";
+			seriesName = "入场效果次数";
+			final_data = generateData(false);
+		}
+		if(final_data.length == 0){
+			echart = echarts.init(document.getElementById('main'));
+			echart.setOption(option);
+			return;
+		}
 		option = {
 			dataset : {
 				dimensions : ["num", "time"],
-				source : generateData()
+				source : final_data
 			},
 			title : {
-				text : "送礼数量折线图"
+				text : name
 			},
 			xAxis : {
 				type : "time",
@@ -92,8 +173,12 @@ function update(){
 					restore : {}
 				}
 			},
-			yAxis : {
-				name : "件/秒"
+			yAxis : chart_type == "followers" ? {
+				name : yAxisName,
+				min : "dataMin",
+				max : "dataMax"
+			} : {
+				name : yAxisName
 			},
 			dataZoom : [
 				{
@@ -105,7 +190,7 @@ function update(){
 			],
 			series : [
 				{
-					name : "送礼数量（件/秒）",
+					name : seriesName,
 					type : "line",
 					encode : {
 						x : "time",
@@ -116,7 +201,13 @@ function update(){
 			]
 		}
 	}
+	if(doDispose){
+		echart = echarts.init(document.getElementById('main'));
+	}
 	echart.setOption(option);
+	$("#database_selector").attr("disabled", false);
+	$("#chart_selector").attr("disabled", false);
+	$("#width").attr("disabled", false);
 }
 
 // 滑动条改变
@@ -135,7 +226,7 @@ function onWidthInput(){
 
 // 滑动条改变
 function onWidthChange(){
-	update();
+	update(false);
 }
 
 // 将滑动条的值转变为时间粒度
@@ -181,7 +272,7 @@ function convert(value){
 }
 
 // 根据时间粒度生成数据
-function generateData(){
+function generateData(flag/* 是否需要转换成每秒的数量 */){
 	// 每组数据包含开始时刻，不包含结束时刻
 	var start_time = data[0].time;
 	var end_time = data[data.length - 1].time;
@@ -198,10 +289,18 @@ function generateData(){
 				break;
 			}
 		}
-		export_data.push({
-			num : Math.round((total_num / width) * 100) / 100,
-			time : cursor
-		});
+		if(flag){
+			export_data.push({
+				num : Math.round((total_num / width) * 100) / 100,
+				time : cursor
+			});
+		}
+		else{
+			export_data.push({
+				num : total_num,
+				time : cursor
+			});
+		}
 		cursor += width * 1000;
 	}
 	return export_data;

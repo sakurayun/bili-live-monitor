@@ -117,6 +117,27 @@ const server = http.createServer(async function(req, res){
 						if(query.chart == "gifts"){
 							data = await database.query(conn, `SELECT num, UNIX_TIMESTAMP(time) * 1000 time FROM gifts order by time;`);
 						}
+						else if(query.chart == "welcome"){
+							data = await database.query(conn, `SELECT 1 num, UNIX_TIMESTAMP(time) * 1000 time FROM welcome_msg order by time;`);
+						}
+						else if(query.chart == "popularity"){
+							data = await database.query(conn, `SELECT popularity num, UNIX_TIMESTAMP(time) * 1000 time FROM popularity order by time;`);
+						}
+						else if(query.chart == "followers"){
+							data = await database.query(conn, `SELECT followers num, UNIX_TIMESTAMP(time) * 1000 time FROM followers order by time;`);
+						}
+						else if(query.chart == "superchat"){
+							data = await database.query(conn, `SELECT 1 num, UNIX_TIMESTAMP(time) * 1000 time FROM superchat order by time;`);
+						}
+						else if(query.chart == "new_guards"){
+							data = await database.query(conn, `SELECT 1 num, UNIX_TIMESTAMP(time) * 1000 time FROM new_guards order by time;`);
+						}
+						else if(query.chart == "events"){
+							data = await database.query(conn, `SELECT 1 num, UNIX_TIMESTAMP(time) * 1000 time FROM json order by time;`);
+						}
+						else if(query.chart == "entry_effect"){
+							data = await database.query(conn, `SELECT 1 num, UNIX_TIMESTAMP(time) * 1000 time FROM entry_effect order by time;`);
+						}
 						res.setHeader("Content-Type", "application/json");
 						res.end(JSON.stringify({
 							code : 0,
