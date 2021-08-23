@@ -1,11 +1,12 @@
 {
 	"name": "bili-live-monitor",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"description": "监控哔哩哔哩直播间数据，并实时保存至数据库。",
 	"main": "bili-live-monitor.js",
 	"scripts": {
 		"start": "node src/main.js",
-		"console": "node src/monitor_console.js"
+		"console": "node src/monitor_console.js",
+		"chart": "node src/chart/server.js"
 	},
 	"repository": {
 		"type": "git",
