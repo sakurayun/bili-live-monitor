@@ -49,7 +49,7 @@ function onChange(){
 	if(chart_type == "danmaku_sum" || chart_type == "danmaku_rank"){
 		url = `getData?database=${database_index}&chart=${chart_type}&combined=${request_combined}`
 	}
-	else if(chart_type == "medal_rank" || chart_type == "medal_level" || chart_type == "level"){
+	else if(chart_type == "medal" || chart_type == "medal_level" || chart_type == "level"){
 		url = `getData?database=${database_index}&chart=${chart_type}&source=${source}`
 	}
 	else{
@@ -325,8 +325,84 @@ function update(doDispose){
 			}
 		}
 	}
-	else if(chart_type == "danmaku_dynamic_rank"){
-		
+	else if(chart_type == "medal" || chart_type == "medal_level" || chart_type == "level"){
+		var legendData = [];
+		var seriesData = [];
+		if(chart_type == "medal"){
+			for(var i = 0; i < data.length; i ++){
+				var text;
+				if(data[i].medal_name == "NO MEDAL OR INVALID ANCHOR"){
+					text = "（无勋章）"
+				}
+				else if(data[i].anchor_name == ""){
+					text = data[i].medal_name;
+				}
+				else{
+					text = `${data[i].medal_name}（${data[i].anchor_name}）`;
+				}
+				legendData.push(text);
+				seriesData.push({
+					name : text,
+					value : data[i].num
+				});
+			}
+		}
+		else{
+			for(var i = 0; i < data.length; i ++){
+				legendData.push(data[i].level + "");
+				seriesData.push({
+					name : data[i].level + "",
+					value : data[i].num
+				});
+			}
+		}
+		var text;
+		if(chart_type == "medal"){
+			text = "粉丝勋章分布";
+		}
+		else if(chart_type == "medal_level"){
+			text = "粉丝勋章等级分布";
+		}
+		else{
+			text = "粉丝勋章等级分布";
+		}
+		option = {
+			title : {
+				text : text
+			},
+			tooltip : {
+				show : true
+			},
+			toolbox : {
+				show : true,
+				feature : {
+					saveAsImage : {}
+				}
+			},
+			series : [
+				{
+					type : "pie",
+					radius : "55%",
+					center : ["40%", "50%"],
+					data : seriesData,
+					emphasis: {
+						itemStyle: {
+							shadowBlur: 10,
+							shadowOffsetX: 0,
+							shadowColor: 'rgba(0, 0, 0, 0.5)'
+						}
+					}
+				}
+			],
+			legend : {
+				type : 'scroll',
+				orient : 'vertical',
+				right : 10,
+				top : 20,
+				bottom : 20,
+				data : legendData
+			}
+		}
 	}
 	if(doDispose){
 		echart = echarts.init(document.getElementById('main'));

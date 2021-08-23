@@ -151,6 +151,15 @@ const server = http.createServer(async function(req, res){
 								rank : rank
 							}
 						}
+						else if(query.chart == "medal"){
+							data = await database.query(conn, `SELECT b.medal_name, b.anchor_name, COUNT(*) num FROM users_from_${query.source} a INNER JOIN fans_medal b ON a.medal=b.anchor_room_id GROUP BY a.medal ORDER BY COUNT(*) DESC LIMIT 50;`);
+						}
+						else if(query.chart == "medal_level"){
+							data = await database.query(conn, `SELECT medal_level level, COUNT(*) num FROM users_from_${query.source} GROUP BY medal_level ORDER BY COUNT(*) DESC;`);
+						}
+						else if(query.chart == "level"){
+							data = await database.query(conn, `SELECT level, COUNT(*) num FROM users_from_${query.source} GROUP BY level ORDER BY COUNT(*) DESC;`);
+						}
 						res.setHeader("Content-Type", "application/json");
 						res.end(JSON.stringify({
 							code : 0,
