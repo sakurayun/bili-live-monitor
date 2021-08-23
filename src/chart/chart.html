@@ -1,0 +1,29 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>bili-live-monitor</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.1.2/dist/echarts.min.js"></script>
+	<script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script src="./chart.js"></script>
+  </head>
+  <body>
+    <div>
+      bili-live-monitor
+      <select id="database_selector" onchange="databaseOnChange(this)">
+        <option value ="">选择数据库</option>
+      </select>
+      <select id="chart_selector" onchange="chartOnChange(this)">
+        <option value ="">选择图表类型</option>
+		<option value ="welcome">观众入场折线图</option>
+		<option value ="popularity">人气变化折线图</option>
+		<option value ="followers">粉丝数变化折线图</option>
+		<option value ="superchat">醒目留言折线图</option>
+		<option value ="new_guards">购买舰长折线图</option>
+		<option value ="events">直播事件折线图</option>
+		<option value ="entry_effect">入场效果折线图</option>
+		<option value ="gifts">送礼数量折线图</option>
+      </select>
+    </div>
+    <div id="main" style="width: 600px;height:400px;"></div>
+  </body>
+</html>
