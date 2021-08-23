@@ -446,6 +446,56 @@ async function main(){
 		conns.push(live_conn);
 	}
 	
+	if(config.database.enable_database){
+		// 添加历史记录
+		try{
+			fs.mkdirSync("histroy");
+		}
+		catch(e){
+			// 已存在histroy目录
+		}
+		var json;
+		var exists = await new Promise((resolve, reject) => {
+			fs.exists("histroy/database_histroy.json", function(exists){
+				resolve(exists);
+			});
+		});
+		if(exists){
+			try{
+				json = JSON.parse(fs.readFileSync("histroy/database_histroy.json", "utf8"));
+			}
+			catch(e){
+				log.v2(`无法读取历史记录文件：${e}`);
+				json = [];
+			}
+		}
+		else{
+			json = [];
+		}
+		label:for(var i = 0; i < rooms.length; i ++){
+			for(var j = 0; j < json.length; j ++){
+				if(json[j].database_name == rooms[i].database_name){
+					json[j].roomid = rooms[i].roomid;
+					json[j].anchor_name = rooms[i].anchor_name;
+					json[j].anchor_mid = rooms[i].anchor_mid;
+					continue label;
+				}
+			}
+			json.push({
+				database_name : rooms[i].database_name,
+				roomid : rooms[i].roomid,
+				anchor_name : rooms[i].anchor_name,
+				anchor_mid : rooms[i].anchor_mid
+			});
+		}
+		try{
+			fs.writeFileSync("histroy/database_histroy.json", JSON.stringify(json));
+		}
+		catch(e){
+			log.v2(`无法写入历史记录文件：${e}`);
+		}
+	}
+	
 	// 此处已全部准备完毕
 	all_ready = true;
 	notification.notifyViaDingTalk("所有监控已设立完毕。");
