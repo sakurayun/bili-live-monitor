@@ -383,7 +383,7 @@ function update(doDispose){
 			text = "粉丝勋章等级分布";
 		}
 		else{
-			text = "粉丝勋章等级分布";
+			text = "直播间等级分布";
 		}
 		option = {
 			title : {
@@ -457,7 +457,6 @@ function combinationOnChange(obj){
 	else{
 		request_combined = true;
 	}
-	alert("当前版本暂未实现");
 	onChange();
 }
 

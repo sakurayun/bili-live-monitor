@@ -6,7 +6,7 @@
 var config;
 // 检查config.js是否有误
 try{
-	config = require('../config');
+	config = require('../../config');
 }
 catch(e){
 	// config.js有语法错误
@@ -104,11 +104,11 @@ const server = http.createServer(async function(req, res){
 	var query = obj.query;
 	if(pathname == "/"){
 		res.setHeader("Content-Type", "text/html");
-		res.end(fs.readFileSync("chart.html"));
+		res.end(fs.readFileSync("src/chart/chart.html"));
 	}
 	else if(pathname == "/chart.js"){
 		res.setHeader("Content-Type", "text/javascript");
-		res.end(fs.readFileSync("chart.js"));
+		res.end(fs.readFileSync("src/chart/chart.js"));
 	}
 	else if(pathname == "/getDatabases"){
 		res.setHeader("Content-Type", "application/json");
@@ -151,13 +151,11 @@ const server = http.createServer(async function(req, res){
 							data = await database.query(conn, `SELECT 1 num, UNIX_TIMESTAMP(time) * 1000 time FROM entry_effect order by time;`);
 						}
 						else if(query.chart == "danmaku_sum"){
-							// TODO
 							data = await database.query(conn, `SELECT 1 num, UNIX_TIMESTAMP(time) * 1000 time FROM danmaku order by time;`);
 						}
 						else if(query.chart == "danmaku_rank"){
-							// TODO
-							danmaku = await database.query(conn, `SELECT text, UNIX_TIMESTAMP(time) * 1000 time FROM danmaku order by time;`);
-							rank = await database.query(conn, `SELECT text FROM danmaku group by text order by COUNT(*) DESC LIMIT 50;`);
+							danmaku = await database.query(conn, `SELECT text, UNIX_TIMESTAMP(time) * 1000 time FROM danmaku${query.combined ? "_combined" : ""} order by time;`);
+							rank = await database.query(conn, `SELECT text FROM danmaku${query.combined ? "_combined" : ""} group by text order by COUNT(*) DESC LIMIT 50;`);
 							data = {
 								danmaku : danmaku,
 								rank : rank
