@@ -523,6 +523,10 @@ function task(){
 			var with_anchor_name = [];
 			var without_anchor_name = [];
 			for(var i = 0; i < temp_array.length; i ++){
+				// 忽略无勋章
+				if(temp_array[i][0] == 0){
+					continue;
+				}
 				if(temp_array[i][1] == ''){
 					without_anchor_name.push(temp_array[i]);
 				}
@@ -536,7 +540,7 @@ function task(){
 					conn.database.queryAsync(conn.roomid, conn.database_conn,'INSERT INTO fans_medal (anchor_room_id, anchor_name, medal_name) VALUES ? ON DUPLICATE KEY UPDATE anchor_name=VALUES(anchor_name), medal_name=VALUES(medal_name)' ,[with_anchor_name]);
 				}
 				if(without_anchor_name.length > 0){
-					conn.database.queryAsync(conn.roomid, conn.database_conn,'INSERT INTO fans_medal (anchor_room_id, anchor_name, medal_name) VALUES ? ON DUPLICATE KEY UPDATE anchor_name=VALUES(anchor_name)' ,[without_anchor_name]);
+					conn.database.queryAsync(conn.roomid, conn.database_conn,'INSERT INTO fans_medal (anchor_room_id, anchor_name, medal_name) VALUES ? ON DUPLICATE KEY UPDATE medal_name=VALUES(medal_name)' ,[without_anchor_name]);
 				}
 			}
 			else{
