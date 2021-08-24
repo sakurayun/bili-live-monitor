@@ -37,6 +37,24 @@ function chartOnChange(obj){
 	var index = obj.selectedIndex;
 	var value = obj.options[index].value;
 	chart_type = value;
+	if(chart_type == "danmaku_rank"){
+		$("#combination_selector").removeAttr("hidden");
+	}
+	else{
+		$("#combination_selector").attr("hidden", "hidden");
+	}
+	if(chart_type == "medal" || chart_type == "medal_level" || chart_type == "level"){
+		$("#source_selector").removeAttr("hidden");
+	}
+	else{
+		$("#source_selector").attr("hidden", "hidden");
+	}
+	if(chart_type == "medal" || chart_type == "medal_level" || chart_type == "level" || chart_type == "followers" || chart_type == "popularity"){
+		$("#div_width").attr("hidden", "hidden");
+	}
+	else{
+		$("#div_width").removeAttr("hidden");
+	}
 	onChange();
 }
 
@@ -53,7 +71,7 @@ function onChange(){
 		url = `getData?database=${database_index}&chart=${chart_type}&source=${source}`
 	}
 	else{
-		url = `getData?database=${database_index}&chart=${chart_type}}`
+		url = `getData?database=${database_index}&chart=${chart_type}`
 	}
 	$.get(url, function(response, status){
 		if(status == "success"){
@@ -255,7 +273,8 @@ function update(doDispose){
 			series.push({
 				name : data.rank[j].text,
 				type : "line",
-				data : export_data[j]
+				data : export_data[j],
+				symbol : "none"
 			});
 			var text = data.rank[j].text.replace(/'/g, "\\'");
 			if(j != data.rank.length - 1){
