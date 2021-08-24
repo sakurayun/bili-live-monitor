@@ -2,12 +2,24 @@
  * HTTP服务器
  * by JellyBlack (https://github.com/JellyBlack/bili-live-monitor)
  */
+
+var config;
+// 检查config.js是否有误
+try{
+	config = require('../config');
+}
+catch(e){
+	// config.js有语法错误
+	console.log("无法读取config.js！请检查括号是否成对，以及是否使用半角符号。");
+	console.log(e);
+	process.exit(0);
+}
+
 const http = require('http');
 const url = require('url');
 const Log = require('../log');
 const Database = require('../database');
 const fs = require('fs');
-const config = require('../../config');
 
 var log = new Log();
 var databases = [];
