@@ -11,6 +11,8 @@
 <details>
     <summary>版本更新记录</summary>
 
+### 0.5.0
+添加弹幕合并功能（pakku.js提供支持）
 ### 0.4.0
 支持查看以下统计图：
 - 弹幕数量折线图（合计）
@@ -124,6 +126,14 @@ npm start
 
 运行`npm run chart`可本地HTTP服务器，访问相应地址（默认为http://localhost:8080）可查看图表。
 
+## 工具箱
+
+运行`npm run tools`打开工具箱，目前提供弹幕合并功能。
+
+### 弹幕合并
+
+该功能由[pakku.js](https://github.com/xmcp/pakku.js)提供支持，可合并弹幕。
+
 
 ## 通知
 bili-live-monitor支持钉钉通知和邮件通知，便于及时推送统计数据。
@@ -143,11 +153,23 @@ bili-live-monitor支持钉钉通知和邮件通知，便于及时推送统计数
 
 ![邮件通知效果（若无法加载请前往Gitee备份仓库）](assets/README/邮件通知效果.jpg)
 
-## 杂项
+## 其他
 
 ### 查看直播间房间号
 
 ![房间号示例（若无法加载请前往Gitee备份仓库）](assets/README/房间号示例.jpg)
+
+### 感谢
+
+感谢以下项目对bili-live-monitor的开发提供帮助。
+
+[**pakku.js**](https://github.com/xmcp/pakku.js)：提供弹幕合并算法（遵循[GPL-3.0开源协议](https://github.com/xmcp/pakku.js/blob/master/LICENSE.txt)）
+
+[**ECharts**](https://echarts.apache.org/)：提供可视化图表库
+
+[**bilibili-live-ws**](https://github.com/simon300000/bilibili-live-ws)：提供哔哩哔哩直播TCP/WS API
+
+[**bilibili-API-collect**](https://github.com/SocialSisterYi/bilibili-API-collect)：提供直播相关API
 
 ### 开发者
 
