@@ -1,7 +1,7 @@
 {
 	"name": "bili-live-monitor",
-	"version": "0.5.0",
-	"description": "监控哔哩哔哩直播间数据，并实时保存至数据库。",
+	"version": "0.6.0",
+	"description": "监控哔哩哔哩直播间数据，实时保存至数据库，并在内置网页上查看精致的可视化统计图表。",
 	"main": "bili-live-monitor.js",
 	"scripts": {
 		"start": "node src/main.js",
@@ -25,7 +25,10 @@
 		"bilibili",
 		"live",
 		"monitor",
-		"mysql"
+		"mysql",
+		"statistics",
+		"data",
+		"visualization"
 	],
 	"dependencies": {
 		"bilibili-live-ws": "^5.1.1",
