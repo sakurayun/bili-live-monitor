@@ -72,6 +72,15 @@ function onChange(){
 	if(database_index == -1 || chart_type == "none" || chart_type == "danmaku_dynamic_rank"){
 		return;
 	}
+	// 以下为无记录的数据
+	if(source == "gifts" && (chart_type == "medal" || chart_type == "level")){
+		alert("数据表中没有记录");
+		return;
+	}
+	if(source == "welcome" && chart_type == "level"){
+		alert("数据表中没有记录");
+		return;
+	}
 	setEnabled(false);
 	var url;
 	if(chart_type == "danmaku_sum" || chart_type == "danmaku_rank"){
