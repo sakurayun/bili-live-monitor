@@ -204,12 +204,19 @@ function update(doDispose/* 是否重新创建ECharts */){
 				source : final_data
 			},
 			title : {
+				left : 'center',
+				textStyle : {
+					fontSize : 26
+				},
 				text : name
 			},
 			xAxis : {
 				type : "time",
 				axisPointer : {
 					show : true
+				},
+				axisLabel : {
+					fontSize : 14
 				}
 			},
 			tooltip : {
@@ -231,9 +238,21 @@ function update(doDispose/* 是否重新创建ECharts */){
 			yAxis : chart_type == "followers" ? {
 				name : yAxisName,
 				min : "dataMin",
-				max : "dataMax"
+				max : "dataMax",
+				nameTextStyle : {
+					fontSize : 15
+				},
+				axisLabel : {
+					fontSize : 14
+				}
 			} : {
-				name : yAxisName
+				name : yAxisName,
+				nameTextStyle : {
+					fontSize : 15
+				},
+				axisLabel : {
+					fontSize : 14
+				}
 			},
 			dataZoom : [
 				{
@@ -323,12 +342,19 @@ function update(doDispose/* 是否重新创建ECharts */){
 		name = "弹幕数量折线图（排行）"
 		option = {
 			title : {
+				left : 'center',
+				textStyle : {
+					fontSize : 26
+				},
 				text : name
 			},
 			xAxis : {
 				type : "time",
 				axisPointer : {
 					show : true
+				},
+				axisLabel : {
+					fontSize : 14
 				}
 			},
 			tooltip : {
@@ -336,6 +362,8 @@ function update(doDispose/* 是否重新创建ECharts */){
 			},
 			toolbox : {
 				show : true,
+				left : "75%",
+				top : "top",
 				feature : {
 					dataZoom : {
 						yAxisIndex : "none"
@@ -346,7 +374,13 @@ function update(doDispose/* 是否重新创建ECharts */){
 			},
 			yAxis : {
 				type : "value",
-				name : "条/秒"
+				name : "条/秒",
+				nameTextStyle : {
+					fontSize : 15
+				},
+				axisLabel : {
+					fontSize : 14
+				}
 			},
 			dataZoom : [
 				{
@@ -362,10 +396,12 @@ function update(doDispose/* 是否重新创建ECharts */){
 				orient : "vertical",
 				left : "right",
 				top : "middle",
-				selected : selected
+				selected : selected,
+				selector: true
 			},
 			grid : {
-				right : "20%"
+				left : "8%",
+				right : "18%"
 			}
 		}
 	}
@@ -412,13 +448,19 @@ function update(doDispose/* 是否重新创建ECharts */){
 		}
 		option = {
 			title : {
+				left : 'center',
+				textStyle : {
+					fontSize : 26
+				},
 				text : name
 			},
 			tooltip : {
-				show : true
+				show : true,
+				top : "top"
 			},
 			toolbox : {
 				show : true,
+				left : "85%",
 				feature : {
 					saveAsImage : {}
 				}
@@ -427,7 +469,7 @@ function update(doDispose/* 是否重新创建ECharts */){
 				{
 					type : "pie",
 					radius : "55%",
-					center : ["40%", "50%"],
+					center : ["45%", "50%"],
 					data : seriesData,
 					emphasis: {
 						itemStyle: {
@@ -441,10 +483,10 @@ function update(doDispose/* 是否重新创建ECharts */){
 			legend : {
 				type : 'scroll',
 				orient : 'vertical',
-				right : 10,
-				top : 20,
-				bottom : 20,
-				data : legendData
+				left : "right",
+				top : "middle",
+				data : legendData,
+				selector: true
 			}
 		}
 	}
