@@ -65,8 +65,7 @@ const queries = {
 	username VARCHAR(50) NOT NULL ${flag ? "COMMENT '用户名'" : ""} ,
 	medal_level TINYINT UNSIGNED NOT NULL DEFAULT '0' ${flag ? "COMMENT '粉丝勋章等级'" : ""} ,
 	guard_level TINYINT NOT NULL DEFAULT '0' ${flag ? "COMMENT '大航海等级 0：普通用户 1：总督 2：提督 3：舰长'" : ""} ,
-	PRIMARY KEY (user_mid)${config.database.enable_index ? ", INDEX (username) , INDEX (medal)" : ""}
-	${config.database.enable_foreign_key ? ", FOREIGN KEY (medal) REFERENCES fans_medal (anchor_room_id)" : ""}) ENGINE = InnoDB ${flag ? "COMMENT = '从礼物采集到的用户信息'" : ""};`,
+	PRIMARY KEY (user_mid)${config.database.enable_index ? ", INDEX (username)" : ""}) ENGINE = InnoDB ${flag ? "COMMENT = '从礼物采集到的用户信息'" : ""};`,
 	
 	"welcome_msg" : `CREATE TABLE IF NOT EXISTS welcome_msg (
 	id INT UNSIGNED NOT NULL AUTO_INCREMENT ${flag ? "COMMENT '主键'" : ""} ,
