@@ -146,14 +146,6 @@ function Connection(){
 		
 		// 收到直播间event
 		this.live_conn.on('msg', (data) => {
-			// 未处在运行状态，则返回
-			if(!this.running){
-				return;
-			}
-			this.recorded_events ++;// 总事件数
-			var date = new Date();
-			var date_str = formatDate(date);
-			
 			// 开播
 			if(data.cmd == 'LIVE'){
 				log.verbose(this.roomid, "【主播已开播】");
@@ -163,7 +155,7 @@ function Connection(){
 			}
 			
 			// 关播
-			if(data.cmd == 'PREPARING'){
+			else if(data.cmd == 'PREPARING'){
 				log.verbose(this.roomid, "【主播已关播】");
 				if(config.extra.auto_stop){
 					// 停止监控
@@ -175,8 +167,16 @@ function Connection(){
 				}
 			}
 			
+			// 未处在运行状态，则返回
+			if(!this.running){
+				return;
+			}
+			this.recorded_events ++;// 总事件数
+			var date = new Date();
+			var date_str = formatDate(date);
+			
 			// 弹幕
-			else if(data.cmd == 'DANMU_MSG'){
+			if(data.cmd == 'DANMU_MSG'){
 				if(config.log.log_level == 1){
 					this.statistics.danmaku ++;
 				}

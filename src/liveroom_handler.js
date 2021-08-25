@@ -57,7 +57,7 @@ function LiveroomHandler() {
 			var root = JSON.parse(xhr.responseText);
 			if(root.code == 0){
 				var data = root.data;
-				var room_id = data.room_id;
+				var room_id = root.data.room_id;
 				var status = root.live_status;
 				return {
 					"trueId" : room_id,
