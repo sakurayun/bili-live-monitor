@@ -321,7 +321,7 @@ function update(doDispose/* 是否重新创建ECharts */){
 			danmaku_legend.push(data.rank[j].text);
 			var text = data.rank[j].text.replace(/'/g, "\\'");
 			if(j != data.rank.length - 1){
-				if(j < 10){
+				if(j < 9){
 					string += `'${text}':true,`;
 				}
 				else{
@@ -329,7 +329,7 @@ function update(doDispose/* 是否重新创建ECharts */){
 				}
 			}
 			else{
-				if(j < 10){
+				if(j < 9){
 					string += `'${text}':true`;
 				}
 				else{
