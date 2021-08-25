@@ -1,12 +1,10 @@
 # bili-live-monitor
 
-监控哔哩哔哩直播间数据，并实时保存至数据库。
+监控哔哩哔哩直播间数据，实时保存至数据库，并在内置网页上查看精致的可视化统计图表。
 
 可部署至Windows, MacOS, Linux云服务器，甚至Android。
 
-**该项目仅用于学习和测试，请勿滥用。该项目处于测试版，以后可能有较大改动。**
-
-**如加载慢，可访问[镜像仓库](https://gitee.com/jellyblack/bili-live-monitor)。**
+**该项目仅用于学习和测试，请勿滥用。如加载慢，可访问[镜像仓库](https://gitee.com/jellyblack/bili-live-monitor)。**
 
 <details>
     <summary>版本更新记录</summary>
@@ -46,7 +44,7 @@
 
 ## 准备
 
-该项目依赖Node.js 7.6（V8版本 5.5）及以上版本。请确保已安装Node.js。运行`node --version`查看Node.js版本号。
+该项目依赖**Node.js** 7.6（V8版本 5.5）及以上版本。请确保已安装Node.js。运行`node --version`查看Node.js版本号。
 
 ### Windows/MacOS安装Node.js
 前往Node.js官网（https://nodejs.org/zh-cn/ ）下载对应的安装包，安装即可。建议下载长期支持（LTS）版。
@@ -72,15 +70,15 @@ Termux是带有软件包的终端模拟器。打开Termux，执行`pkg install n
 
 ------
 
-该项目需要MySQL数据库以存储数据（你也可以在配置里禁用）。Windows, MacOS, Linux安装MySQL的方法请上网搜索，这里不再赘述。也可以选择各主机商的云数据库。
+该项目需要**MySQL**数据库以存储数据（你也可以在配置里禁用）。Windows, MacOS, Linux安装MySQL的方法请上网搜索，这里不再赘述。也可以选择各主机商的云数据库。
 
-**注意：最好在同一终端上运行监控和服务器，或两者处在同一内网。**
+注意：最好在同一终端上运行监控和服务器，或两者处在同一内网。
 
 ### Android安装MySQL
 
 打开Termux，执行`pkg install mariadb`即可。
 
-安装后，为bili-live-monitor指定一个用户，至少应拥有以下全局权限：SELECT, INSERT, UPDATE, CREATE, INDEX, DROP, SHOW DATABASES。
+安装后，为bili-live-monitor指定一个用户，至少应拥有以下全局权限：SELECT, INSERT, UPDATE, CREATE, INDEX, DROP, SHOW DATABASES, CREATE TEMPORARY TABLES。
 
 ------
 
@@ -120,28 +118,48 @@ npm start
 
 ### 管理
 
-运行`npm run console`进入监控控制台，可以安全停止监控。
+运行`npm run console`进入监控控制台，可以切换监控状态、安全停止监控。
 
 **一定要安全停止！** 使用Ctrl+C停止会丢失缓冲区的数据。
 
 ## 统计
-**该功能目前处于开发阶段。**
+运行`npm run chart`可运行本地HTTP服务器，访问相应地址（默认为http://localhost:8080）可查看图表。当然，也可以在`config.js`里调整配置以供外网访问。（不过简易HTTP服务器没有过多的安全措施，请谨慎）
 
-运行`npm run chart`可本地HTTP服务器，访问相应地址（默认为http://localhost:8080）可查看图表。
+打开网页，请在**下拉列表**中选择希望统计的数据库和图表类型。针对某些图表，还可以选择数据源或用户来源。（关于合并弹幕请参考下文）
+
+点击“**导出CSV**”按钮，可导出Excel可查看的CSV文件，用于在Excel中生成图表。
+
+有一个特殊的图表类型“**弹幕数量动态排行**”，可导出用于见齐的动态排行数据可视化项目的CSV数据源。[点此访问项目地址](https://github.com/Jannchie/Historical-ranking-data-visualization-based-on-d3.js)。
+
+可以用滑动条选择需要的**时间粒度**，从1秒到24小时不等。时间粒度指的是以多长的时间为单位组合数据。直观而言，时间粒度越小，图表越精细，锯齿状波动越多（渲染压力也越大）；时间粒度越大，图表越简略，锯齿状波动越少。调试并选择**合适的时间粒度**有利于数据合理的展现。
+
+图表右上角有**工具箱**，有区域缩放、切换图表类型、下载png图片等功能。坐标系类图表下方有**区域缩放**控件，可展示部分数据的详细信息。
+
+注：如下拉列表中无欲选择的数据库，请尝试删除`histroy/database_histroy.json`。
+
+以下为图表示例。
+
+![弹幕数量折线图（排行）（若无法加载请前往Gitee备份仓库）](assets/README/弹幕数量折线图（排行）.jpg)
+
+![粉丝勋章分布（若无法加载请前往Gitee备份仓库）](assets/README/粉丝勋章分布.jpg)
 
 ## 工具箱
 
 运行`npm run tools`打开工具箱，目前提供弹幕合并功能。
 
+注：如无欲选择的数据库，请尝试删除`histroy/database_histroy.json`。
+
 ### 弹幕合并
 
-该功能由[pakku.js](https://github.com/xmcp/pakku.js)提供支持，可合并弹幕。
+该功能由[pakku.js](https://github.com/xmcp/pakku.js)提供支持，可合并弹幕。合并后的弹幕写入`danmaku_combined`数据表中。
+
+通过编辑距离、2-Gram词频向量、谐音等多个维度全方位合并相似弹幕，在弹幕数量排行等统计中尤其有用。
 
 ## 用SQL导出CSV文件
 
 **内置网页中展示的图表，都可以下载对应的CSV文件。此部分供自定义导出使用。**
 
-**如需使用Jannchie的动态排序柱状图，请参考上文“工具箱”，此处不能导出所需CSV文件。**
+如需使用见齐的动态排序柱状图，请参考上文“统计”，此处不能导出所需CSV文件。
 
 以下为导出示例。当然，你也可以导出更多种类的表格，只需编写SQL即可。
 
@@ -163,7 +181,7 @@ ESCAPED BY '"'
 LINES TERMINATED BY '\r\n';
 ```
 
-**如需要导出合并后的弹幕数据，把`danmaku`替换成`danmaku_combined`即可。**
+如需要导出合并后的弹幕数据，把`danmaku`替换成`danmaku_combined`即可。
 
 导出示例
 
@@ -224,7 +242,7 @@ bili-live-monitor支持钉钉通知和邮件通知，便于及时推送统计数
 
 在钉钉创建一个群聊，添加自定义机器人。官方文档地址：https://developers.dingtalk.com/document/robots/custom-robot-access 
 
-勾选“自定义关键词”安全设置，关键词填写“bili-live”或“monitor”。
+勾选“自定义关键词”安全设置，关键词填写“bili-live”或“monitor”。暂不支持签名，请勿勾选“加签”。
 
 将Webhook地址填入config.js文件中。
 
