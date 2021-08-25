@@ -29,7 +29,7 @@ var conn;
 async function main(){
 	// 访问数据库
 	log.v1(`正在获取数据库列表`);
-	var existing_dbs = [];
+	var existing_dbs = [];// 已有的数据库列表
 	var json = [];
 	try{
 		database.createPool();
@@ -98,10 +98,11 @@ async function main(){
 // 入口
 main();
 
+// HTTP服务器
 const server = http.createServer(async function(req, res){
 	var obj = url.parse(req.url, true);
 	var pathname = obj.pathname;
-	var query = obj.query;
+	var query = obj.query;// 请求参数
 	if(pathname == "/"){
 		res.setHeader("Content-Type", "text/html");
 		res.end(fs.readFileSync("src/chart/chart.html"));

@@ -2,17 +2,19 @@
  * 前端js
  * by JellyBlack (https://github.com/JellyBlack/bili-live-monitor)
  */
-var echart;
-var option;
-var width = 60;
-var chart_type;
-var data;
-var final_data;
-var name;
-var databases = []; 
-var request_combined = false;
-var source = "danmaku";
-var danmaku_legend = ["time"];
+
+var echart;// EChart实例
+var option;// EChart选项
+var width = 60;// 默认时间粒度
+var database_index = -1;// 当前的数据库
+var chart_type = "none";// 图表类型
+var data;// 从服务器接收的数据
+var final_data;// 准备传给ECharts的数据
+var name;// ECharts图表名称
+var databases = []; // 数据库列表
+var request_combined = false;// 是否请求合并后的弹幕
+var source = "danmaku";// 用户来源
+var danmaku_legend = ["time"];// 用于弹幕数量折线图（排行）
 $(function(){
 	// 获取可用的数据库列表
 	$.get("getDatabases", function(data, status){
@@ -28,9 +30,7 @@ $(function(){
 	});
 });
 
-var database_index = -1;
-var chart_type = "none";
-
+// 数据库下拉列表改变事件
 function databaseOnChange(obj){
 	var index = obj.selectedIndex;
 	var value = obj.options[index].value;
@@ -38,6 +38,7 @@ function databaseOnChange(obj){
 	onChange();
 }
 
+// 图表类型下拉列表改变事件
 function chartOnChange(obj){
 	var index = obj.selectedIndex;
 	var value = obj.options[index].value;
@@ -66,6 +67,7 @@ function chartOnChange(obj){
 	onChange();
 }
 
+// 图表改变事件
 function onChange(){
 	if(database_index == -1 || chart_type == "none" || chart_type == "danmaku_dynamic_rank"){
 		return;
@@ -81,6 +83,7 @@ function onChange(){
 	else{
 		url = `getData?database=${database_index}&chart=${chart_type}`
 	}
+	// 向服务器请求数据
 	$.get(url, function(response, status){
 		if(status == "success"){
 			if(response.code == 0){
@@ -109,6 +112,7 @@ function onChange(){
 	});
 }
 
+// 设置控件能否交互
 function setEnabled(boo){
 	$("#database_selector").attr("disabled", !boo);
 	$("#chart_selector").attr("disabled", !boo);
@@ -118,7 +122,8 @@ function setEnabled(boo){
 	$("#export").attr("disabled", !boo);
 }
 
-function update(doDispose){
+// 更新ECharts
+function update(doDispose/* 是否重新创建ECharts */){
 	if(echart != undefined && doDispose){
 		echart.dispose();
 	}
@@ -555,6 +560,7 @@ function generateData(flag/* 是否需要转换成每秒的数量 */){
 	return export_data;
 }
 
+// “导出CSV”按钮的点击事件
 function exportOnClick(){
 	var exportData = [];
 	if(chart_type == "gifts" || chart_type == "welcome" || chart_type == "popularity" || chart_type == "followers" || chart_type == "superchat" || chart_type == "new_guards" || chart_type == "events" || chart_type == "entry_effect" || chart_type == "danmaku_sum"){
@@ -647,7 +653,8 @@ function exportOnClick(){
 	}
 }
 
-function createAndDownloadFile(fileName, content, write_bom) {
+// 下载文件
+function createAndDownloadFile(fileName, content, write_bom/* 是否写入BOM */) {
 	if(write_bom){
 		// 由于微软的操作，需要写入3字节的BOM才会按照UTF-8编码读取，否则中文乱码
 		var arrayBuffer = new ArrayBuffer(8);
