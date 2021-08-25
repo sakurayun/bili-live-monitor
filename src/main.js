@@ -134,9 +134,15 @@ async function main(){
 		});
 	});
 	
-	server.listen(config.extra.console_port, function() {
-		log.v0(`在${config.extra.console_port}端口上侦听控制台连接`);
-	});
+	try{
+		server.listen(config.extra.console_port, function() {
+			log.v0(`在${config.extra.console_port}端口上侦听控制台连接`);
+		});
+	}
+	catch(e){
+		log.v2("无法侦听控制台！请检查端口号是否合法，并注意不可多实例运行。" + e);
+		process.exit(0);
+	}
 	
 	// 桥头麻袋，让“侦听控制台连接”的日志先打印
 	await new Promise((resolve, reject) => {
