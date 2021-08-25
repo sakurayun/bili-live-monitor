@@ -63,7 +63,6 @@ const queries = {
 	"users_from_gifts" : `CREATE TABLE IF NOT EXISTS users_from_gifts (
 	user_mid INT UNSIGNED NOT NULL ${flag ? "COMMENT '用户的mid'" : ""} ,
 	username VARCHAR(50) NOT NULL ${flag ? "COMMENT '用户名'" : ""} ,
-	medal INT UNSIGNED NOT NULL DEFAULT '0' ${flag ? "COMMENT '粉丝勋章对应主播的房间号'" : ""} ,
 	medal_level TINYINT UNSIGNED NOT NULL DEFAULT '0' ${flag ? "COMMENT '粉丝勋章等级'" : ""} ,
 	guard_level TINYINT NOT NULL DEFAULT '0' ${flag ? "COMMENT '大航海等级 0：普通用户 1：总督 2：提督 3：舰长'" : ""} ,
 	PRIMARY KEY (user_mid)${config.database.enable_index ? ", INDEX (username) , INDEX (medal)" : ""}

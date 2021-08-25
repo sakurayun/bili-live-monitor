@@ -283,9 +283,6 @@ function Connection(){
 				var num = data.data.num;
 				var coin_type = data.data.coin_type == 'silver' ? 0 : 1; // @陈睿，给前端说一声，IDE要开启拼写检查功能
 				var price = data.data.price;
-				var anchor_room_id = data.data.medal_info.anchor_roomid;
-				var anchor_name = data.data.medal_info.anchor_uname;
-				var medal_name = data.data.medal_info.medal_name;
 				var medal_level = data.data.medal_info.medal_level;
 				var guard_level = data.data.medal_info.guard_level;
 				if(config.log.log_level == 1){
@@ -298,8 +295,7 @@ function Connection(){
 					log.verbose(this.roomid, `  ${username} < 赠送了 ${num} 个 ${gift_name}`);
 				}
 				if(config.database.enable_database){
-					this.buffer.fans_medal.push([anchor_room_id, anchor_name, medal_name]);
-					this.buffer.users_from_gifts.push([mid, username, anchor_room_id, medal_level, guard_level]);
+					this.buffer.users_from_gifts.push([mid, username, medal_level, guard_level]);
 					this.buffer.gifts.push([mid, gift_id, gift_name, num, false, date_str, coin_type, price]);
 				}
 			}
@@ -313,9 +309,6 @@ function Connection(){
 				var gift_id = data.data.gift_id;
 				var num = data.data.combo_num;
 				var price = data.data.combo_total_coin / num;
-				var anchor_room_id = data.data.medal_info.anchor_roomid;
-				var anchor_name = data.data.medal_info.anchor_uname;
-				var medal_name = data.data.medal_info.medal_name;
 				var medal_level = data.data.medal_info.medal_level;
 				var guard_level = data.data.medal_info.guard_level;
 				if(config.log.log_level == 1){
@@ -328,8 +321,7 @@ function Connection(){
 					log.verbose(this.roomid, `  ${username} < 连击赠送了 ${num} 个 ${gift_name}`);
 				}
 				if(config.database.enable_database){
-					this.buffer.fans_medal.push([anchor_room_id, anchor_name, medal_name]);
-					this.buffer.users_from_gifts.push([mid, username, anchor_room_id, medal_level, guard_level]);
+					this.buffer.users_from_gifts.push([mid, username, medal_level, guard_level]);
 					this.buffer.gifts.push([mid, gift_id, gift_name, num, true, date_str, -1, price]);
 				}
 			}
@@ -575,10 +567,10 @@ function task(){
 		// 礼物及用户
 		if(conn.buffer.gifts.length >= config.database.amount || conn.last_query.gifts >= config.database.sql_interval * 1000 && conn.buffer.gifts.length > 0){
 			if(config.extra.override){
-				conn.database.queryAsync(conn.roomid, conn.database_conn,'INSERT INTO users_from_gifts (user_mid, username, medal, medal_level, guard_level) VALUES ? ON DUPLICATE KEY UPDATE username=VALUES(username), medal=VALUES(medal), medal_level=VALUES(medal_level), guard_level=VALUES(guard_level)' ,[conn.buffer.users_from_gifts.splice(0, conn.buffer.users_from_gifts.length)]);
+				conn.database.queryAsync(conn.roomid, conn.database_conn,'INSERT INTO users_from_gifts (user_mid, username, medal_level, guard_level) VALUES ? ON DUPLICATE KEY UPDATE username=VALUES(username), medal_level=VALUES(medal_level), guard_level=VALUES(guard_level)' ,[conn.buffer.users_from_gifts.splice(0, conn.buffer.users_from_gifts.length)]);
 			}
 			else{
-				conn.database.queryAsync(conn.roomid, conn.database_conn,'INSERT IGNORE INTO users_from_gifts (user_mid, username, medal, medal_level, guard_level) VALUES ?' ,[conn.buffer.users_from_gifts.splice(0, conn.buffer.users_from_gifts.length)]);
+				conn.database.queryAsync(conn.roomid, conn.database_conn,'INSERT IGNORE INTO users_from_gifts (user_mid, username, medal_level, guard_level) VALUES ?' ,[conn.buffer.users_from_gifts.splice(0, conn.buffer.users_from_gifts.length)]);
 			}
 			conn.database.queryAsync(conn.roomid, conn.database_conn,'INSERT INTO gifts (user_mid, gift_id, gift_name, num, is_combo_send, time, coin_type, price) VALUES ?' ,[conn.buffer.gifts.splice(0, conn.buffer.gifts.length)]);
 			conn.last_query.gifts=0;
