@@ -134,8 +134,88 @@ npm start
 
 该功能由[pakku.js](https://github.com/xmcp/pakku.js)提供支持，可合并弹幕。
 
+## 用SQL导出CSV文件
+
+**内置网页中展示的图表，都可以下载对应的CSV文件。此部分供自定义导出使用。**
+
+**如需使用Jannchie的动态排序柱状图，请参考上文“工具箱”，此处不能导出所需CSV文件。**
+
+以下为导出示例。当然，你也可以导出更多种类的表格，只需编写SQL即可。
+
+**`INTO OUTFILE`后面的`...`替换为CSV文件存放的路径，如`./danmaku.csv`。**
+
+如需要添加条件，则在注释的地方添加WHERE子句（去掉注释），如`WHERE time > '2021-08-23 21:34:00'`。如需限制导出的数量，则在注释的地方添加`LIMIT <最大数量>`（去掉注释）。
+
+如果报`--secure-file-priv`错误，请参考[这篇博客](https://www.cnblogs.com/Braveliu/p/10728162.html)解决。受权限限制，不能导出至任意文件夹，请导出后手动移动位置。如需要表头，手动添加即可。
+
+### 弹幕数量排行
+
+```sql
+SELECT text, COUNT(*) FROM danmaku /* WHERE ... */
+GROUP BY text ORDER BY COUNT(*) DESC /* LIMIT ... */
+INTO OUTFILE '...' CHARACTER SET gbk
+FIELDS ENCLOSED BY '"'
+TERMINATED BY ','
+ESCAPED BY '"'
+LINES TERMINATED BY '\r\n';
+```
+
+**如需要导出合并后的弹幕数据，把`danmaku`替换成`danmaku_combined`即可。**
+
+导出示例
+
+| text               | COUNT(*) |
+| ------------------ | -------- |
+| 哈哈哈哈哈哈哈哈哈 | 1421     |
+| 23333333333        | 1312     |
+| awsl               | 1028     |
+
+### 礼物种类排行
+
+```sql
+SELECT gift_name, COUNT(*) FROM gifts /* WHERE ... */
+GROUP BY gift_id ORDER BY COUNT(*) DESC /* LIMIT ... */
+INTO OUTFILE '...' CHARACTER SET gbk
+FIELDS ENCLOSED BY '"'
+TERMINATED BY ','
+ESCAPED BY '"'
+LINES TERMINATED BY '\r\n';
+```
+
+导出示例
+
+| gift_name | COUNT(*) |
+| --------- | -------- |
+| 小心心    | 46123    |
+| 辣条      | 12468    |
+| 心动卡    | 820      |
+
+### 用户发送弹幕数排行
+
+```sql
+SELECT u.username, COUNT(*) FROM danmaku d
+INNER JOIN users_from_danmaku u ON d.user_mid=u.user_mid
+/* WHERE ... */
+GROUP BY d.user_mid ORDER BY COUNT(*) DESC /* LIMIT ... */
+INTO OUTFILE '...' CHARACTER SET gbk
+FIELDS ENCLOSED BY '"'
+TERMINATED BY ','
+ESCAPED BY '"'
+LINES TERMINATED BY '\r\n';
+```
+
+导出示例
+
+| username   | COUNT(*) |
+| ---------- | -------- |
+| JellyBlack | 310      |
+| 小号生     | 182      |
+| 碧诗       | 92       |
+
+以上仅为示例，还可以导出更多种类的CSV。
 
 ## 通知
+
 bili-live-monitor支持钉钉通知和邮件通知，便于及时推送统计数据。
 ### 钉钉通知
 
