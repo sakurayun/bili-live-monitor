@@ -7,14 +7,19 @@ var option;
 var width = 60;
 var chart_type;
 var data;
+var final_data;
+var name;
+var databases = []; 
 var request_combined = false;
 var source = "danmaku";
+var danmaku_legend = ["time"];
 $(function(){
 	// 获取可用的数据库列表
 	$.get("getDatabases", function(data, status){
 		if(status == "success"){
 			data.forEach((element) => {
 				$("#database_selector").append(`<option value="${element.database_name}">${element.display}</option>`);
+				databases.push(element.display);
 			});
 		}
 		else{
@@ -107,6 +112,7 @@ function setEnabled(boo){
 	$("#width").attr("disabled", !boo);
 	$("#combination_selector").attr("disabled", !boo);
 	$("#source_selector").attr("disabled", !boo);
+	$("#export").attr("disabled", !boo);
 }
 
 function update(doDispose){
@@ -114,10 +120,8 @@ function update(doDispose){
 		echart.dispose();
 	}
 	if(chart_type == "gifts" || chart_type == "welcome" || chart_type == "popularity" || chart_type == "followers" || chart_type == "superchat" || chart_type == "new_guards" || chart_type == "events" || chart_type == "entry_effect" || chart_type == "danmaku_sum"){
-		var name;
 		var yAxisName;
 		var seriesName;
-		var final_data;
 		if(chart_type == "gifts"){
 			name = "送礼数量折线图";
 			yAxisName = "件/秒";
@@ -267,8 +271,10 @@ function update(doDispose){
 			}
 			cursor += width * 1000;
 		}
+		final_data = export_data;
 		var series = [];
 		var string = "{";
+		danmaku_legend = ["time"];
 		for(var j = 0; j < data.rank.length; j ++){
 			series.push({
 				name : data.rank[j].text,
@@ -276,6 +282,7 @@ function update(doDispose){
 				data : export_data[j],
 				symbol : "none"
 			});
+			danmaku_legend.push(data.rank[j].text);
 			var text = data.rank[j].text.replace(/'/g, "\\'");
 			if(j != data.rank.length - 1){
 				if(j < 10){
@@ -296,9 +303,10 @@ function update(doDispose){
 		}
 		string += "}";
 		var selected = eval("(" + string + ")");
+		name = "弹幕数量折线图（排行）"
 		option = {
 			title : {
-				text : "弹幕数量折线图（排行）"
+				text : name
 			},
 			xAxis : {
 				type : "time",
@@ -375,19 +383,19 @@ function update(doDispose){
 				});
 			}
 		}
-		var text;
+		final_data = seriesData;
 		if(chart_type == "medal"){
-			text = "粉丝勋章分布";
+			name = "粉丝勋章分布";
 		}
 		else if(chart_type == "medal_level"){
-			text = "粉丝勋章等级分布";
+			name = "粉丝勋章等级分布";
 		}
 		else{
-			text = "直播间等级分布";
+			name = "直播间等级分布";
 		}
 		option = {
 			title : {
-				text : text
+				text : name
 			},
 			tooltip : {
 				show : true
@@ -451,7 +459,7 @@ function onWidthChange(){
 
 function combinationOnChange(obj){
 	var index = obj.selectedIndex;
-	if(index = 0){
+	if(index == 0){
 		request_combined = false;
 	}
 	else{
@@ -542,4 +550,61 @@ function generateData(flag/* 是否需要转换成每秒的数量 */){
 		cursor += width * 1000;
 	}
 	return export_data;
+}
+
+function exportOnClick(){
+	var exportData = [];
+	if(chart_type == "gifts" || chart_type == "welcome" || chart_type == "popularity" || chart_type == "followers" || chart_type == "superchat" || chart_type == "new_guards" || chart_type == "events" || chart_type == "entry_effect" || chart_type == "danmaku_sum"){
+		final_data.forEach(function(element){
+			exportData.push({
+				time : formatDate(element.time),
+				num : element.num
+			});
+		});
+		var file = new CSV(exportData, {header: true}).encode();
+		createAndDownloadFile(databases[database_index] + " - " + name + ".csv", file);
+	}
+	else if(chart_type == "medal" || chart_type == "medal_level" || chart_type == "level"){
+		exportData = final_data;
+		var file = new CSV(exportData, {header: true}).encode();
+		createAndDownloadFile(databases[database_index] + " - " + name + ".csv", file);
+	}
+	else if(chart_type == "danmaku_rank"){
+		for(var i = 0; i < final_data[0].length; i ++){
+			exportData.push([formatDate(final_data[0][i][0])]);
+		}
+		for(var i = 1; i < danmaku_legend.length; i ++){
+			for(var j = 0; j < final_data[0].length; j ++){
+				exportData[j].push(final_data[i - 1][j][1]);
+			}
+		}
+		var file = new CSV(exportData, {header: danmaku_legend}).encode();
+		createAndDownloadFile(databases[database_index] + " - " + name + ".csv", file);
+	}
+}
+
+function createAndDownloadFile(fileName, content) {
+	// 由于微软的操作，需要写入3字节的BOM才会按照UTF-8编码读取，否则中文乱码
+	var arrayBuffer = new ArrayBuffer(8);
+	new Uint8Array(arrayBuffer, 0,1)[0] = 0xEF;
+	new Uint8Array(arrayBuffer, 1,1)[0] = 0xBB;
+	new Uint8Array(arrayBuffer, 2,1)[0] = 0xBF;
+    var aTag = document.createElement('a');
+    var blob = new Blob([arrayBuffer, content]);
+    aTag.download = fileName;
+    aTag.href = URL.createObjectURL(blob);
+    aTag.click();
+    URL.revokeObjectURL(blob);
+}
+
+// 格式化日期
+function formatDate(date) {
+    var date = new Date(date);
+    var YY = date.getFullYear() + '-';
+    var MM = (date.getMonth() + 1 < 10 ? '0' + (date.getMonth() + 1) : date.getMonth() + 1) + '-';
+    var DD = (date.getDate() < 10 ? '0' + (date.getDate()) : date.getDate());
+    var hh = (date.getHours() < 10 ? '0' + date.getHours() : date.getHours()) + ':';
+    var mm = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()) + ':';
+    var ss = (date.getSeconds() < 10 ? '0' + date.getSeconds() : date.getSeconds());
+    return YY + MM + DD +" "+hh + mm + ss;
 }

@@ -5,6 +5,7 @@
 		<script src="https://cdn.jsdelivr.net/npm/echarts@5.1.2/dist/echarts.min.js"></script>
 		<script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
 		<script src="./chart.js"></script>
+		<script src="./csv.min.js"></script>
 	</head>
 	<body>
 		<div>
@@ -38,6 +39,7 @@
 			<option value ="welcome">用户来源：入场</option>
 			<option value ="superchat">用户来源：醒目留言</option>
 			</select>
+			<button id="export" onclick="exportOnClick()">导出CSV</button>
 		</div>
 		<div id="div_width">
 			<label>时间粒度</label>

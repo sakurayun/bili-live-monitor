@@ -110,6 +110,10 @@ const server = http.createServer(async function(req, res){
 		res.setHeader("Content-Type", "text/javascript");
 		res.end(fs.readFileSync("src/chart/chart.js"));
 	}
+	else if(pathname == "/csv.min.js"){
+		res.setHeader("Content-Type", "text/javascript");
+		res.end(fs.readFileSync("src/chart/csv.js/csv.min.js"));
+	}
 	else if(pathname == "/getDatabases"){
 		res.setHeader("Content-Type", "application/json");
 		res.end(JSON.stringify(databases));
@@ -154,8 +158,8 @@ const server = http.createServer(async function(req, res){
 							data = await database.query(conn, `SELECT 1 num, UNIX_TIMESTAMP(time) * 1000 time FROM danmaku order by time;`);
 						}
 						else if(query.chart == "danmaku_rank"){
-							danmaku = await database.query(conn, `SELECT text, UNIX_TIMESTAMP(time) * 1000 time FROM danmaku${query.combined ? "_combined" : ""} order by time;`);
-							rank = await database.query(conn, `SELECT text FROM danmaku${query.combined ? "_combined" : ""} group by text order by COUNT(*) DESC LIMIT 50;`);
+							danmaku = await database.query(conn, `SELECT text, UNIX_TIMESTAMP(time) * 1000 time FROM danmaku${query.combined == "true" ? "_combined" : ""} order by time;`);
+							rank = await database.query(conn, `SELECT text FROM danmaku${query.combined == "true" ? "_combined" : ""} group by text order by COUNT(*) DESC LIMIT 50;`);
 							data = {
 								danmaku : danmaku,
 								rank : rank
