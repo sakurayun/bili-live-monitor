@@ -106,6 +106,10 @@ const server = http.createServer(async function(req, res){
 		res.setHeader("Content-Type", "text/html");
 		res.end(fs.readFileSync("src/chart/chart.html"));
 	}
+	else if(pathname == "/favicon.ico"){
+		res.setHeader("Content-Type", "image/x-icon");
+		res.end(fs.readFileSync("assets/favicon.ico"));
+	}
 	else if(pathname == "/chart.js"){
 		res.setHeader("Content-Type", "text/javascript");
 		res.end(fs.readFileSync("src/chart/chart.js"));
