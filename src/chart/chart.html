@@ -1,7 +1,7 @@
 <html>
 	<head>
-		<meta charset="utf-8">
-		<title>bili-live-monitor</title>
+		<meta charset="utf-8" />
+		<title>bili-live-monitor可视化图表</title>
 		<script src="https://cdn.jsdelivr.net/npm/echarts@5.1.2/dist/echarts.min.js"></script>
 		<script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
 		<script src="./chart.js"></script>
@@ -9,7 +9,7 @@
 	</head>
 	<body>
 		<div>
-			bili-live-monitor
+			<b>bili-live-monitor可视化图表</b>
 			<select id="database_selector" onchange="databaseOnChange(this)">
 			<option value ="">选择数据库</option>
 			</select>
@@ -44,9 +44,9 @@
 		</div>
 		<div id="div_width">
 			<label>时间粒度</label>
-			<input id="width" type="range" min="1" max="150" value="45" onchange="onWidthChange()" oninput="onWidthInput()" />
+			<input id="width" type="range" min="1" max="150" value="45" onchange="onWidthChange()" oninput="onWidthInput()" style="width:300px" />
 			<label id="width_label">60秒</label>
 		</div>
-		<div id="main" style="width: 1600px;height:800px;"></div>
+		<div id="main" style="width: 100%; height:90%"></div>
 	</body>
 </html>
