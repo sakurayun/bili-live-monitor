@@ -165,6 +165,9 @@ const server = http.createServer(async function(req, res){
 								rank : rank
 							}
 						}
+						else if(query.chart == "danmaku_dynamic_rank"){
+							data = await database.query(conn, `SELECT text, UNIX_TIMESTAMP(time) * 1000 time FROM danmaku${query.combined == "true" ? "_combined" : ""} order by time;`);
+						}
 						else if(query.chart == "medal"){
 							data = await database.query(conn, `SELECT b.medal_name, b.anchor_name, COUNT(*) num FROM users_from_${query.source} a INNER JOIN fans_medal b ON a.medal=b.anchor_room_id GROUP BY a.medal ORDER BY COUNT(*) DESC LIMIT 50;`);
 						}

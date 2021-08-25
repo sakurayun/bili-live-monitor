@@ -42,7 +42,7 @@ function chartOnChange(obj){
 	var index = obj.selectedIndex;
 	var value = obj.options[index].value;
 	chart_type = value;
-	if(chart_type == "danmaku_rank"){
+	if(chart_type == "danmaku_rank" || chart_type == "danmaku_dynamic_rank"){
 		$("#combination_selector").removeAttr("hidden");
 	}
 	else{
@@ -60,11 +60,14 @@ function chartOnChange(obj){
 	else{
 		$("#div_width").removeAttr("hidden");
 	}
+	if(chart_type == "danmaku_dynamic_rank"){
+		alert("提示：请和见齐的数据可视化项目配套使用，点击“生成CSV”可生成所用数据。建议选择合并后的弹幕。");
+	}
 	onChange();
 }
 
 function onChange(){
-	if(database_index == -1 || chart_type == "none"){
+	if(database_index == -1 || chart_type == "none" || chart_type == "danmaku_dynamic_rank"){
 		return;
 	}
 	setEnabled(false);
@@ -562,12 +565,12 @@ function exportOnClick(){
 			});
 		});
 		var file = new CSV(exportData, {header: true}).encode();
-		createAndDownloadFile(databases[database_index] + " - " + name + ".csv", file);
+		createAndDownloadFile(databases[database_index] + " - " + name + ".csv", file, true);
 	}
 	else if(chart_type == "medal" || chart_type == "medal_level" || chart_type == "level"){
 		exportData = final_data;
 		var file = new CSV(exportData, {header: true}).encode();
-		createAndDownloadFile(databases[database_index] + " - " + name + ".csv", file);
+		createAndDownloadFile(databases[database_index] + " - " + name + ".csv", file, true);
 	}
 	else if(chart_type == "danmaku_rank"){
 		for(var i = 0; i < final_data[0].length; i ++){
@@ -579,22 +582,93 @@ function exportOnClick(){
 			}
 		}
 		var file = new CSV(exportData, {header: danmaku_legend}).encode();
-		createAndDownloadFile(databases[database_index] + " - " + name + ".csv", file);
+		createAndDownloadFile(databases[database_index] + " - " + name + ".csv", file, true);
+	}
+	else if(chart_type == "danmaku_dynamic_rank"){
+		setEnabled(false);
+		var url = `getData?database=${database_index}&chart=${chart_type}&combined=${request_combined}`
+		$.get(url, function(response, status){
+			if(status == "success"){
+				if(response.code == 0){
+					data = response.data;
+					if(data.length == 0 || (data.danmaku != undefined && data.danmaku.length == 0)){
+						alert("数据表中没有记录");
+						setEnabled(true);
+					}
+					else{
+						var start_time = data[0].time;
+						var end_time = data[data.length - 1].time;
+						var cursor = start_time;
+						var i = 0;
+						var records = [];
+						while(cursor <= end_time){
+							label: for(; i < data.length; i ++){
+								if(data[i].time < cursor + width * 1000){
+									for(var j = 0; j < records.length; j ++){
+										if(records[j].text == data[i].text){
+											records[j].num ++;
+											break label;
+										}
+									}
+									records.push({
+										text : data[i].text,
+										num : 1
+									});
+								}
+								else{
+									break label;
+								}
+							}
+							records.forEach(function(element){
+								exportData.push([element.text, formatDate(cursor), element.num]);
+							});
+							records = [];
+							cursor += width * 1000;
+						}
+						var file = new CSV(exportData, {header: ["name", "date", "value"]}).encode();
+						createAndDownloadFile(databases[database_index] + " - " + "弹幕数量动态排行" + ".csv", file, false);
+						setEnabled(true);
+					}
+				}
+				else if(response.code == -1){
+					alert("请求不合法");
+					setEnabled(true);
+				}
+				else if(response.code == -2){
+					alert("数据表不存在或格式异常");
+					setEnabled(true);
+				}
+			}
+			else{
+				alert("无法加载数据！");
+				setEnabled(true);
+			}
+		});
 	}
 }
 
-function createAndDownloadFile(fileName, content) {
-	// 由于微软的操作，需要写入3字节的BOM才会按照UTF-8编码读取，否则中文乱码
-	var arrayBuffer = new ArrayBuffer(8);
-	new Uint8Array(arrayBuffer, 0,1)[0] = 0xEF;
-	new Uint8Array(arrayBuffer, 1,1)[0] = 0xBB;
-	new Uint8Array(arrayBuffer, 2,1)[0] = 0xBF;
-    var aTag = document.createElement('a');
-    var blob = new Blob([arrayBuffer, content]);
-    aTag.download = fileName;
-    aTag.href = URL.createObjectURL(blob);
-    aTag.click();
-    URL.revokeObjectURL(blob);
+function createAndDownloadFile(fileName, content, write_bom) {
+	if(write_bom){
+		// 由于微软的操作，需要写入3字节的BOM才会按照UTF-8编码读取，否则中文乱码
+		var arrayBuffer = new ArrayBuffer(8);
+		new Uint8Array(arrayBuffer, 0,1)[0] = 0xEF;
+		new Uint8Array(arrayBuffer, 1,1)[0] = 0xBB;
+		new Uint8Array(arrayBuffer, 2,1)[0] = 0xBF;
+		var aTag = document.createElement('a');
+		var blob = new Blob([arrayBuffer, content]);
+		aTag.download = fileName;
+		aTag.href = URL.createObjectURL(blob);
+		aTag.click();
+		URL.revokeObjectURL(blob);
+	}
+	else{
+		var aTag = document.createElement('a');
+		var blob = new Blob([content]);
+		aTag.download = fileName;
+		aTag.href = URL.createObjectURL(blob);
+		aTag.click();
+		URL.revokeObjectURL(blob);
+	}
 }
 
 // 格式化日期
