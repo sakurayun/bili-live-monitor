@@ -20,6 +20,7 @@ const url = require('url');
 const Log = require('../log');
 const Database = require('../database');
 const fs = require('fs');
+const opn = require('opn');
 
 var log = new Log();
 var databases = [];
@@ -92,6 +93,7 @@ async function main(){
 	}
 	server.listen(config.server.port, host, function(){
 		log.v2(`服务器正在${config.server.port}端口上侦听`);
+		opn(`http://localhost:${config.server.port}`);
 	});
 }
 
