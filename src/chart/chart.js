@@ -62,7 +62,7 @@ function chartOnChange(obj){
 		$("#div_width").removeAttr("hidden");
 	}
 	if(chart_type == "danmaku_dynamic_rank"){
-		alert("提示：请和见齐的数据可视化项目配套使用，点击“生成CSV”可生成所用数据。建议选择合并后的弹幕。");
+		alert("提示：请和见齐的数据可视化项目配套使用，点击“导出CSV”可生成所用数据。建议选择合并后的弹幕。");
 	}
 	onChange();
 }
@@ -302,7 +302,7 @@ function update(doDispose/* 是否重新创建ECharts */){
 				}
 			}
 			for(var j = 0; j < data.rank.length; j ++){
-				export_data[j].push([ cursor, Math.round((records[j] / width) * 100) / 100 ]);
+				export_data[j].push([ cursor, Math.round((records[j] / width) * 10000) / 10000 ]);
 				records[j] = 0;
 			}
 			cursor += width * 1000;
@@ -596,7 +596,7 @@ function generateData(flag/* 是否需要转换成每秒的数量 */){
 		}
 		if(flag){
 			export_data.push({
-				num : Math.round((total_num / width) * 100) / 100,
+				num : Math.round((total_num / width) * 10000) / 10000,
 				time : cursor
 			});
 		}
