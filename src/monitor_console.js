@@ -2,6 +2,7 @@
  * 监控控制台
  * by JellyBlack (https://github.com/JellyBlack/bili-live-monitor)
  */
+
 var config;
 try{
 	config = require('../config');

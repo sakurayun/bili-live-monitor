@@ -2,6 +2,7 @@
  * 直播间连接
  * by JellyBlack (https://github.com/JellyBlack/bili-live-monitor)
  */
+
 const config = require('../config');
 const { LiveWS, LiveTCP, KeepLiveWS, KeepLiveTCP } = require('bilibili-live-ws');
 const Database = require('./database');
@@ -26,7 +27,7 @@ var query_right_now = {
 	new_guards : config.database.sql_interval * 1001,
 	entry_effect : config.database.sql_interval * 1001,
 	superchat : config.database.sql_interval * 1001
-}
+};
 
 function Connection(){
 	this.create = function(roomid, anchor_mid, database, database_conn, running/* 初始状态 */){
@@ -69,7 +70,7 @@ function Connection(){
 				new_guards : 0,
 				entry_effect : 0,
 				superchat : 0
-			}
+			};
 			
 			// 统计数据（日志）
 			this.statistics = {
@@ -77,7 +78,7 @@ function Connection(){
 				welcome_msg : 0,
 				gifts : 0,
 				json : 0
-			}
+			};
 			
 			// 统计数据（邮件）
 			this.statistics_email = {
@@ -85,7 +86,7 @@ function Connection(){
 				welcome_msg : 0,
 				gifts : 0,
 				json : 0
-			}
+			};
 			
 			var live_conn;// bilibili-live-ws
 			// TCP协议
@@ -269,7 +270,7 @@ function Connection(){
 				var username = data.data.copy_writing.replace(/^.*?<%/, '').replace(/%>.*?$/, '');
 				var privilege_type = data.data.privilege_type;
 				if(config.log_dtl == 0){
-					log(`    ${username} < 进入直播间`);
+					log(`    ${username} 进入直播间`);
 				}
 				this.buffer.entry_effect.push([origin_id, user_mid, username, privilege_type, date_str]);
 			}
@@ -292,7 +293,7 @@ function Connection(){
 					this.statistics_email.gifts += num;
 				}
 				if(config.log.log_level == 0){
-					log.verbose(this.roomid, `  ${username} < 赠送了 ${num} 个 ${gift_name}`);
+					log.verbose(this.roomid, `  ${username} 赠送了 ${num} 个 ${gift_name}`);
 				}
 				if(config.database.enable_database){
 					this.buffer.users_from_gifts.push([mid, username, medal_level, guard_level]);
@@ -318,7 +319,7 @@ function Connection(){
 					this.statistics_email.gifts += num;
 				}
 				if(config.log.log_level == 0){
-					log.verbose(this.roomid, `  ${username} < 连击赠送了 ${num} 个 ${gift_name}`);
+					log.verbose(this.roomid, `  ${username} 连击赠送了 ${num} 个 ${gift_name}`);
 				}
 				if(config.database.enable_database){
 					this.buffer.users_from_gifts.push([mid, username, medal_level, guard_level]);
@@ -336,7 +337,7 @@ function Connection(){
 				var gift_name = data.data.gift_name;
 				var time = formatDate(data.data.start_time * 1000);
 				if(config.log.log_level == 0){
-					log.verbose(this.roomid, `  ${username} 开通了${gift_name}`);
+					log.verbose(this.roomid, `  ${username} 开通了 ${gift_name}`);
 				}
 				if(config.database.enable_database){
 					this.buffer.new_guards.push([user_mid, username, guard_level, num, price, time]);

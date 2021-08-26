@@ -91,10 +91,17 @@ async function main(){
 	if(config.server.host != ""){
 		host = config.server.host;
 	}
-	server.listen(config.server.port, host, function(){
-		log.v2(`服务器正在${config.server.port}端口上侦听`);
-		opn(`http://localhost:${config.server.port}`);
-	});
+	try{
+		server.listen(config.server.port, host, function(){
+			log.v2(`服务器正在${config.server.port}端口上侦听`);
+			opn(`http://localhost:${config.server.port}`);
+		});
+	}
+	catch(e){
+		log.v2(`无法侦听端口${config.server.port}！请检查端口是否被占用：${e}`);
+		conn.release();
+		process.exit(0);
+	}
 }
 
 // 入口

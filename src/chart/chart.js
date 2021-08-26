@@ -613,6 +613,10 @@ function generateData(flag/* 是否需要转换成每秒的数量 */){
 
 // “导出CSV”按钮的点击事件
 function exportOnClick(){
+	if(database_index == -1){
+		alert("未选中数据库");
+		return;
+	}
 	var exportData = [];
 	if(chart_type == "gifts" || chart_type == "welcome" || chart_type == "popularity" || chart_type == "followers" || chart_type == "superchat" || chart_type == "new_guards" || chart_type == "events" || chart_type == "entry_effect" || chart_type == "danmaku_sum"){
 		final_data.forEach(function(element){
@@ -701,6 +705,9 @@ function exportOnClick(){
 				setEnabled(true);
 			}
 		});
+	}
+	else{
+		alert("未选中图表");
 	}
 }
 

@@ -2,6 +2,7 @@
  * 打印日志模块
  * by JellyBlack (https://github.com/JellyBlack/bili-live-monitor)
  */
+
 const config = require('../config');
 const fs = require('fs');
 

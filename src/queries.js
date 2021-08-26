@@ -2,6 +2,7 @@
  * 存储建表语句的js
  * by JellyBlack (https://github.com/JellyBlack/bili-live-monitor)
  */
+
 const config = require('../config');
 const flag = config.database.enable_comment;
 

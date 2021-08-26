@@ -2,6 +2,7 @@
  * 主文件
  * by JellyBlack (https://github.com/JellyBlack/bili-live-monitor)
  */
+
 var config;
 // 检查config.js是否有误
 try{
@@ -233,7 +234,7 @@ async function main(){
 		}
 		catch(e){
 			log.v2(`第${currentRoom}个直播间出错：${e}\n`);
-			return;
+			process.exit(0);
 		}
 	}
 	// 没有任何直播间，则退出

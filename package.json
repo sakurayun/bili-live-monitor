@@ -6,7 +6,8 @@
 	"scripts": {
 		"start": "node src/main.js",
 		"console": "node src/monitor_console.js",
-		"chart": "node src/chart/server.js"
+		"chart": "node src/chart/server.js",
+		"tools": "node src/tools/interface.js"
 	},
 	"repository": {
 		"type": "git",

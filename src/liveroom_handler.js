@@ -2,6 +2,7 @@
  * 直播间处理
  * by JellyBlack (https://github.com/JellyBlack/bili-live-monitor)
  */
+
 const xmlhttprequest = require('xmlhttprequest');
 const config = require('../config');
 

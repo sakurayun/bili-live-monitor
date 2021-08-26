@@ -2,6 +2,7 @@
  * 统计工具
  * by JellyBlack (https://github.com/JellyBlack/bili-live-monitor)
  */
+
 var config;
 // 检查config.js是否有误
 try{
@@ -145,7 +146,7 @@ async function main(){
 			});
 			log.v1("正在写入合并后的弹幕数据");
 			// 创建临时表
-			await database.query(conn, `CREATE TEMPORARY TABLE danmaku_tmp(id INT(11) PRIMARY KEY, text VARCHAR(50));`);
+			await database.query(conn, `CREATE TEMPORARY TABLE danmaku_tmp(id INT(11) PRIMARY KEY, text TEXT);`);
 			var chunk = 1000;// 单次更新的数据量
 			while(out_data.length != 0){
 				var danmakus = out_data.splice(0, chunk);
@@ -158,8 +159,8 @@ async function main(){
 			console.log(e);
 		}
 		finally{
-			process.exit(0);
 			conn.release();
+			process.exit(0);
 		}
 	}
 }
