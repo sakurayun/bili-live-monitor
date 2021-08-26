@@ -56,7 +56,9 @@ async function main(){
 	}
 	// 打印版本信息
 	log.v2(`bili-live-monitor v${version}`);
-	log.v2("https://github.com/JellyBlack/bili-live-monitor");
+	log.v2("Copyright (C) 2021 Jelly Black");
+	log.v2("本项目使用GPLv3协议在GitHub开源，许可详情请访问https://gnu.org/licenses/gpl-3.0.html");
+	log.v2("项目开源地址：https://github.com/JellyBlack/bili-live-monitor");
 	log.init();// 初始化日志服务
 	// 开启本地TCP服务器，用于与控制台通信
 	
