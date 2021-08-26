@@ -465,7 +465,7 @@ function Connection(){
 						return;
 					}
 					for(var i = 0; i < conns.length;  i++){
-						if(conns[i].auto_stopped = false){
+						if(!conns[i].auto_stopped){
 							return;
 						}
 					}
