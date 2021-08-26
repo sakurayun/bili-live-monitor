@@ -28,8 +28,7 @@
 		"monitor",
 		"mysql",
 		"statistics",
-		"data",
-		"visualization"
+		"data-visualization"
 	],
 	"dependencies": {
 		"bilibili-live-ws": "^5.1.1",
